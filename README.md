@@ -133,3 +133,6 @@ As an an open-source project with a strong focus on the user community, we welco
 ## 📄 License
 
 Source code in this repository is variously licensed under the Apache License 2.0. A copy of each license can be found in the [licenses](LICENSE) directory.
+
+## YUGA-BENCH CIS Benchmark Sample HTML Report
+[YUGABYTEDB-CIS-REPORT](https://github.com/yugabyte/yuga-bench)
