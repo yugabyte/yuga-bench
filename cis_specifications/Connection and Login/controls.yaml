@@ -1,0 +1,60 @@
+section:
+  name: "Connection and Login"
+  description: |
+    Settings are generally recommended to be applied to all defined profiles. The following
+    presents standalone examples of logins for particular use cases. The authentication
+    rules are read from the YugabyteDB host-based authentication file, pg_hba.conf, from
+    top to bottom. The first rule conforming to the condition of the request executes the
+    METHOD and stops further processing of the file. Incorrectly applied rules, as defined
+    by a single line instruction, can substantially alter the intended behavior resulting in
+    either allowing or denying login attempts.
+  number: "6"
+
+controls:
+  - id: "6.1"
+    title: "Ensure login via local UNIX Domain Socket is configured correctly"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      A remote host login, via SSH, is arguably the most secure means of remotely accessing
+      and administering the YugabyteDB server. Once connected to the YugabyteDB server,
+      using the ysqlsh client, via UNIX DOMAIN SOCKETS, while using the peer
+      authentication method is the most secure mechanism available for local database
+      connections. Provided a database user account of the same name of the UNIX account
+      has already been defined in the database, even ordinary user accounts can access the
+      cluster in a similarly highly secure manner.
+    rationale: |
+
+    audit: |
+      Newly created data clusters are empty of data and have two user accounts, the
+      superusers yugabyte and postgres. By default, the data cluster superuser is named
+      after the UNIX account yugabyte. Login authentication is tested via UNIX DOMAIN
+      SOCKETS by the UNIX user account yugabyte, the default account, and set_user has
+      not yet been configured:
+      # ./bin/yugabyte
+      yugabyte=#
+      Login attempts by another UNIX user account as the superuser should be denied:
+      # su - user1 # whoami user1
+      # ./bin/ysqlsh -U yugabyte -d yugabyte
+      ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+      # exit
+      This test demonstrates that not only is logging in as the superuser blocked, but so is
+      logging in as another user:
+      # su - user2 # whoami user2
+      # ./bin/ysqlsh -U yugabyte -d yugabyte
+      ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+      # ./bin/ysqlsh -U user1 -d yugabyte
+      ysqlsh: FATAL: Peer authentication failed for user "user1"
+      # ./bin/ysqlsh -U user2 -d yugabyte
+      yugabyte=#
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -

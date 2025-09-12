@@ -1,0 +1,37 @@
+section:
+  name: "Directory and File Permissions"
+  description: "This section provides guidance on securing all operating system specific objects for YugabyteDB."
+  number: "2"
+
+controls:
+  - id: "2.1"
+    title: "Ensure the file permissions mask is correct"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      Files are always created using a default set of permissions. File permissions can be
+      restricted by applying a permissions mask called the umask. The yugabyte user account
+      should use a umask of 077 to deny file access to all user accounts except the owner.
+    rationale: |
+
+    audit: |
+      To view the mask's current setting, execute the following commands:
+      # whoami
+      root
+      # su - yugabyte
+      # whoami
+      yugabyte
+      # umask 0022
+      The umask must be 077 or more restrictive for the yugabyte user, otherwise, this is a
+      fail.
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -

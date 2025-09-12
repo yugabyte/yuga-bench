@@ -1,0 +1,32 @@
+section:
+  name: "YugabyteDB Settings"
+  description: |
+    As YugabyteDB evolves with each new iteration, configuration parameters are
+    constantly being added, deprecated, or removed. These configuration parameters
+    define not only server function but how well it performs.
+  number: "7"
+
+controls:
+  - id: "7.1"
+    title: "Understanding attack vectors and runtime GFLAGs"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      Understanding the vulnerability of YugabyteDB runtime parameters by the particular
+      delivery method, or attack vector.
+    rationale: |
+
+    audit: |
+      Review all configuration settings. Configure YugabyteDB logging to record all
+      modifications and changes to the RDBMS.
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -

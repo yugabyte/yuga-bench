@@ -1,0 +1,52 @@
+section:
+  name: "Installation and Patches"
+  description: |
+    One of the best ways to ensure YugabyteDB security is to implement security updates
+    as they come out, along with any applicable OS patches that will not interfere with
+    system operations. It is additionally prudent to ensure the installed version has not
+    reached end-of-life.
+  number: "1"
+
+controls:
+  - id: "1.1"
+    title: "Ensure packages are obtained from authorized repositories"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+
+    rationale: |
+
+    audit: |
+      Identify and inspect configured repositories to ensure they are all valid and authorized
+      sources of packages. The following is an example of a simple Linux command verifying
+      integrity of YugabyteDB package by validating the checksum:
+      #!/bin/bash
+      # File name and URLs
+      FILE_NAME="yugabyte-2.20.0.0-b1-linux-x86_64.tar.gz"
+      FILE_URL="https://downloads.yugabyte.com/releases/2.20.0.0/$FILE_NAME"
+      SIGNATURE_URL="$FILE_URL.sha"
+      # Check if file exists locally
+      if [ ! -f "$FILE_NAME" ]; then
+      echo "File $FILE_NAME does not exist locally. Please download
+      installation package to proceed. Exiting."
+      exit 1
+      fi
+      # Compare checksums
+      if [ "$(wget -qO- $SIGNATURE_URL)" == "$(sha1sum $FILE_NAME | awk '{print
+      $1}')" ]; then
+      echo "Checksums match. File is verified."
+      else
+      echo "Checksums do not match. File might be corrupted or tampered with."
+      If the checksum of the binary packages does not match the checksum from
+      download.yugabyte.com, this is a fail.
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -

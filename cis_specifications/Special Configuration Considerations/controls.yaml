@@ -1,0 +1,37 @@
+section:
+  name: "Special Configuration Considerations"
+  description: |
+    The recommendations proposed here try to address some of the less common use
+    cases which may warrant additional configuration guidance/consideration.
+  number: "8"
+
+controls:
+  - id: "8.1"
+    title: "Ensure base backups are configured and functional"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      Backup and restoration is the process of creating and storing copies of your data for
+      protection against data loss. With a proper backup strategy, you can always restore
+      your data to a most-recent known working state and minimize application downtime.
+      This in turn guarantees business and application continuity.
+    rationale: |
+
+    audit: |
+      Verify snapshots exist by executing the list_snapshots command, as follows:
+      ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
+      All the snapshots in the cluster are listed, along with their statuses.
+      Snapshot UUID State Creation Time
+      0d4b4935-2c95-4523-95ab-9ead1e95e794 COMPLETE 2023-04-20
+      00:20:38.214201
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -

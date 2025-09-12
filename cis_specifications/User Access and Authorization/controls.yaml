@@ -1,0 +1,54 @@
+section:
+  name: "User Access and Authorization"
+  description: |
+    The capability to use database resources at a given level, or user authorization rules,
+    allows for user manipulation of the various parts of the Yugabyte Structured Query
+    Language (YSQL) database. These authorizations must be structured to block
+    unauthorized use and/or corruption of vital data and services by setting restrictions on
+    user capabilities.
+  number: "4"
+
+controls:
+  - id: "4.1"
+    title: "Ensure sudo is configured correctly"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      It is common to have more than one authorized individual administering the
+      YugabyteDB service at the Operating System level. It is also quite common to permit
+      login privileges to individuals on a YugabyteDB host who otherwise are not authorized
+      to access the server's data cluster and files. Administering the YugabyteDB data cluster,
+      as opposed to its data, is to be accomplished via a localhost login of a regular UNIX
+      user account. Access to the yugabyte superuser account is restricted in such a manner
+      as to interdict unauthorized access. sudo satisfies the requirements by escalating
+      ordinary user account privileges as the YugabyteDB RDBMS superuser.
+    rationale: |
+
+    audit: |
+      Log in as an Operating System user authorized to escalate privileges and test the sudo
+      invocation by executing the following:
+      whoami user1
+      # groups user1
+      # sudo su - yugabyte
+      [sudo] password for user1:
+      user1 is not in the sudoers file. This incident will be reported.
+      As shown above, user1 has not been added to the /etc/sudoers file or made a member
+      of any group listed in the /etc/sudoers file. Whereas:
+      # whoami user2
+      # groups user2 dba
+      # sudo su - yugabyte [sudo] password for user2:
+      # whoami
+      yugabyte
+      This shows that the user2 user is configured properly for sudo access by being a
+      member of the dba group.
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -

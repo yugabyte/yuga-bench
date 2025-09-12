@@ -1,0 +1,33 @@
+section:
+  name: "Access Control / Password Policies"
+  description: "This section contains recommendations related to Yugabyte Cloud Query Language (YCQL) password policies."
+  number: "5"
+
+controls:
+  - id: "5.1"
+    title: "Ensure that authentication is enabled for YCQL interface of the YugabyteDB"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YCQL authentication is based on roles. Roles can be created with superuser, nonsuperuser, and login privileges. New roles can be created, and existing ones altered or
+      dropped by administrators using YCQL commands.
+    rationale: |
+
+    audit: |
+      Run the following command to verify whether authentication is enabled on the YCQL
+      interface of the YugabyteDB server.
+      The YugabyteDB configuration files can be found in the conf directory of tarballs. For
+      packages, the configuration files will be located in /home/user/var/conf.
+      cat ts.config | grep use_cassandra_authentication
+      If use_cassandra_authentication is set to false, then this is a finding.
+    remediation: |
+
+    impact: |
+
+    default_value:
+    type: "Manual"
+    references:
+      -
+      -
+    cis_controls:
+      -
