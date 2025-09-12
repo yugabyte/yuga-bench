@@ -1,0 +1,10 @@
+[flake8]
+max-line-length = 120
+max-complexity = 18
+select = ANN,B,C,E,F,Q0,W,T4,B9
+inline-quotes = double
+docstring-quotes = double
+avoid-escape = False
+exclude = app/models.py
+suppress-none-returning = True
+ignore = ANN101,ANN102,ANN401,W504,C901
