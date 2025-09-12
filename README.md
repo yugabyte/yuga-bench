@@ -120,6 +120,15 @@ GRANT SELECT ON pg_settings TO audit_user;
 - **[YugabyteDB Security Documentation](https://docs.yugabyte.com/latest/secure/)**
 - **[CIS Benchmarks Official Site](https://www.cisecurity.org/cis-benchmarks)**
 
+# Need Help?
+
+* You can ask questions, find answers, and help others on our Community [Slack](https://communityinviter.com/apps/yugabyte-db/register), [Forum](https://forum.yugabyte.com), [Stack Overflow](https://stackoverflow.com/questions/tagged/yugabyte-db), as well as Twitter [@Yugabyte](https://twitter.com/yugabyte)
+
+* Please use [GitHub issues](https://github.com/yugabyte/yuga-bench/issues) to report issues or request new features.
+
+# Contribute
+
+As an an open-source project with a strong focus on the user community, we welcome contributions as GitHub pull requests. See our [Contributor Guides](https://docs.yugabyte.com/preview/contribute/) to get going. Discussions and RFCs for features happen on the design discussions section of our [Forum](https://forum.yugabyte.com).
 
 ## 📄 License
 
