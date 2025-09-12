@@ -1,0 +1,1845 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YugabyteDB CIS Benchmark Report</title>
+    
+    <style>
+        :root {
+            --yugabyte-orange: #FF6900;
+            --yugabyte-dark-orange: #E55A00;
+            --yugabyte-blue: #1F2F98;
+            --yugabyte-light-blue: #4A90E2;
+            --yugabyte-dark-blue: #0F1B5C;
+            --yugabyte-black: #1A1A1A;
+            --yugabyte-dark-gray: #2D2D2D;
+            --yugabyte-light-gray: #F5F7FA;
+            --yugabyte-border: #E1E5E9;
+            --success-green: #22C55E;
+            --warning-amber: #F59E0B;
+            --error-red: #EF4444;
+            --info-cyan: #06B6D4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--yugabyte-black);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            font-weight: 900;
+            color: rgba(31, 47, 152, 0.05);
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--yugabyte-blue) 0%, var(--yugabyte-dark-blue) 50%, var(--yugabyte-orange) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.3" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            margin: 0.5rem 0;
+            opacity: 0.95;
+            font-size: 1.1rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            text-align: center;
+            border-left: 6px solid var(--yugabyte-blue);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 105, 0, 0.05) 0%, transparent 50%);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-card.passed {
+            border-left-color: var(--success-green);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, white 100%);
+        }
+        .summary-card.failed {
+            border-left-color: var(--error-red);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, white 100%);
+        }
+        .summary-card.warnings {
+            border-left-color: var(--warning-amber);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, white 100%);
+        }
+        .summary-card.skipped {
+            border-left-color: var(--yugabyte-dark-gray);
+            background: linear-gradient(135deg, rgba(45, 45, 45, 0.05) 0%, white 100%);
+        }
+
+        .summary-card h3 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            position: relative;
+        }
+
+        .summary-card.passed h3 {
+            color: var(--success-green);
+            text-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+        }
+        .summary-card.failed h3 {
+            color: var(--error-red);
+            text-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        }
+        .summary-card.warnings h3 {
+            color: var(--warning-amber);
+            text-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+        }
+        .summary-card.skipped h3 {
+            color: var(--yugabyte-dark-gray);
+            text-shadow: 0 2px 4px rgba(45, 45, 45, 0.2);
+        }
+
+        .summary-card p {
+            font-weight: 600;
+            color: var(--yugabyte-black);
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .section-summary {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid var(--yugabyte-border);
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--yugabyte-light-gray) 0%, #ffffff 100%);
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--yugabyte-orange);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, rgba(255, 105, 0, 0.1) 0%, #ffffff 100%);
+            transform: translateX(4px);
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--yugabyte-blue);
+            font-weight: 700;
+        }
+
+        .section-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .section-stat {
+            background: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            border: 2px solid var(--yugabyte-orange);
+            color: var(--yugabyte-blue);
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(255, 105, 0, 0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 105, 0, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--yugabyte-orange) 0%, var(--success-green) 100%);
+            transition: width 0.5s ease;
+            border-radius: 6px;
+        }
+
+        .controls-container {
+            padding: 1.5rem;
+            display: none;
+            background: rgba(31, 47, 152, 0.02);
+        }
+
+        .controls-container.expanded {
+            display: block;
+        }
+
+        .control {
+            border: 1px solid var(--yugabyte-border);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .control:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .control.pass {
+            border-left: 5px solid var(--success-green);
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.1);
+        }
+        .control.fail {
+            border-left: 5px solid var(--error-red);
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
+        }
+        .control.warn {
+            border-left: 5px solid var(--warning-amber);
+            box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.1);
+        }
+        .control.skip {
+            border-left: 5px solid var(--yugabyte-dark-gray);
+            box-shadow: 0 0 0 1px rgba(45, 45, 45, 0.1);
+        }
+        .control.info {
+            border-left: 5px solid var(--info-cyan);
+            box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.1);
+        }
+
+        .control-header {
+            padding: 1.2rem 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(245, 247, 250, 0.8) 100%);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .control-header:hover {
+            background: linear-gradient(135deg, rgba(255, 105, 0, 0.05) 0%, rgba(245, 247, 250, 0.8) 100%);
+        }
+
+        .control-body {
+            padding: 1.5rem;
+            background: white;
+            display: none;
+            border-top: 1px solid rgba(255, 105, 0, 0.1);
+        }
+
+        .control-body.expanded {
+            display: block;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.PASS {
+            background: linear-gradient(135deg, var(--success-green) 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+        }
+
+        .status-badge.FAIL {
+            background: linear-gradient(135deg, var(--error-red) 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+
+        .status-badge.WARN {
+            background: linear-gradient(135deg, var(--warning-amber) 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-badge.SKIP {
+            background: linear-gradient(135deg, var(--yugabyte-dark-gray) 0%, #404040 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(45, 45, 45, 0.3);
+        }
+
+        .status-badge.INFO {
+            background: linear-gradient(135deg, var(--info-cyan) 0%, #0891b2 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(6, 182, 212, 0.3);
+        }
+
+        .remediation {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%);
+            border: 2px solid rgba(245, 158, 11, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .remediation::before {
+            content: '⚠️';
+            position: absolute;
+            top: -8px;
+            left: 15px;
+            background: white;
+            padding: 0 8px;
+            font-size: 1.2rem;
+        }
+
+        .audit-cmd {
+            background: linear-gradient(135deg, var(--yugabyte-black) 0%, var(--yugabyte-dark-gray) 100%);
+            color: var(--yugabyte-orange);
+            border: 1px solid var(--yugabyte-orange);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .detail-row {
+            margin: 1rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .detail-label {
+            font-weight: 700;
+            color: var(--yugabyte-blue);
+            min-width: 120px;
+            background: rgba(31, 47, 152, 0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .chevron {
+            transition: all 0.3s ease;
+            color: var(--yugabyte-orange);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .chevron.rotated {
+            transform: rotate(90deg);
+            color: var(--yugabyte-blue);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header {
+                padding: 2rem 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .summary-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .summary-card h3 {
+                font-size: 2.5rem;
+            }
+
+            .section-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .watermark {
+                font-size: 4rem;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .detail-label {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">YugabyteDB</div>
+    <div class="container">
+        
+        <div class="header">
+            <h1>YugabyteDB CIS Benchmark Report</h1>
+            <p><strong>Profile Level:</strong> Level 1</p>
+            <p><strong>Cluster:</strong> localhost:5433</p>
+            <p><strong>Database:</strong> yugabyte</p>
+            <p><strong>Version:</strong> PostgreSQL 15.12-YB-2.25.2.0-b0 on aarch64-unknown-linux-gnu, compiled by clang version 19.1.0 (https://github.com/yugabyte/llvm-project.git a2a6b655e14e7fa1fcf1011a6cb29cb8575249c0), 64-bit</p>
+            <p><strong>Scan Time:</strong> 2025-09-12 16:25:30</p>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>33</h3>
+                <p>Total Checks</p>
+            </div>
+            <div class="summary-card passed">
+                <h3>4</h3>
+                <p>Passed</p>
+            </div>
+            <div class="summary-card failed">
+                <h3>1</h3>
+                <p>Failed</p>
+            </div>
+            <div class="summary-card warnings">
+                <h3>0</h3>
+                <p>Warnings</p>
+            </div>
+            <div class="summary-card skipped">
+                <h3>13</h3>
+                <p>Skipped</p>
+            </div>
+        </div>
+        
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Installation and Patches <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>1.1: Ensure packages are obtained from authorized repositories</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Identify and inspect configured repositories to ensure they are all valid and authorized
+sources of packages. The following is an example of a simple Linux command verifying
+integrity of YugabyteDB package by validating the checksum:
+#!/bin/bash
+# File name and URLs
+FILE_NAME="yugabyte-2.20.0.0-b1-linux-x86_64.tar.gz"
+FILE_URL="https://downloads.yugabyte.com/releases/2.20.0.0/$FILE_NAME"
+SIGNATURE_URL="$FILE_URL.sha"
+# Check if file exists locally
+if [ ! -f "$FILE_NAME" ]; then
+echo "File $FILE_NAME does not exist locally. Please download
+installation package to proceed. Exiting."
+exit 1
+fi
+# Compare checksums
+if [ "$(wget -qO- $SIGNATURE_URL)" == "$(sha1sum $FILE_NAME | awk '{print
+$1}')" ]; then
+echo "Checksums match. File is verified."
+else
+echo "Checksums do not match. File might be corrupted or tampered with."
+If the checksum of the binary packages does not match the checksum from
+download.yugabyte.com, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Directory and File Permissions <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>2.1: Ensure the file permissions mask is correct</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">To view the mask's current setting, execute the following commands:
+# whoami
+root
+# su - yugabyte
+# whoami
+yugabyte
+# umask 0022
+The umask must be 077 or more restrictive for the yugabyte user, otherwise, this is a
+fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Logging Monitoring and Auditing <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 26</div>
+                        <div class="section-stat">Passed: 4</div>
+                        <div class="section-stat">Failed: 1</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 15.4%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 15.384615384615385%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.1: Logging Rationale</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="control pass">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.2: Ensure the log destinations are set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge PASS">PASS</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>log_destination is properly configured: stderr</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>['stderr', 'csvlog', 'syslog']</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>stderr</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm that the expected logging directory is  specified:
+
+yugabyte=# SHOW log_destination;
+ log_destination
+-----------------
+ stderr
+(1 row)
+
+The log destinations should comply with your organization's policies on logging. If all the  expected log destinations are not set, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control pass">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.3: Ensure the filename pattern for log files is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge PASS">PASS</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Log filename pattern includes time-based rotation: postgresql-%Y-%m-%d_%H%M%S.log</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Time-based rotation pattern</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>postgresql-%Y-%m-%d_%H%M%S.log</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm that the desired pattern is set:
+yugabyte=# show log_filename;
+log_filename
+--------------------------------
+postgresql-%Y-%m-%d_%H%M%S.log
+(1 row)
+Note: This example shows the use of the strftime %a escape. This creates seven log
+files, one for each day of the week (e.g. postgresql-Mon.log, postgresql-Tue.log, et al).
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.4: Ensure the log file permissions are set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Log file permissions check requires manual OS-level verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify that the setting is consistent with
+organizational logging policy:
+yugabyte=# show log_file_mode;
+log_file_mode
+---------------
+0600
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control fail">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.5: Ensure 'log_truncate_on_rotation' is enabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge FAIL">FAIL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>log_truncate_on_rotation is not properly configured: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>True</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify how log_truncate_on_rotation is set:
+yugabyte=# show log_truncate_on_rotation;
+log_truncate_on_rotation
+--------------------------
+off
+(1 row)
+If it is not set to on, this is a fail (depending on your organization's logging policy).
+</div>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br><br>./bin/yb-tserver --ysql_pg_conf_csv=“log_truncate_on_rotation='on'”<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control pass">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.6: Ensure the maximum log file lifetime is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge PASS">PASS</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Log rotation age is configured: 1d</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Non-zero rotation age</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>1d</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the log rotation age is set to an
+acceptable value:
+yugabyte=# show log_rotation_age;
+log_rotation_age
+------------------
+1d
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control pass">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.7: Ensure the maximum log file size is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge PASS">PASS</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Log rotation size is configured: 10MB</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Non-zero rotation size</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>10MB</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify that log_rotation_size is set in
+compliance with the organization's logging policy:
+yugabyte=# show log_rotation_size;
+log_rotation_size
+-------------------
+10MB
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.8: Ensure the correct syslog facility is selected</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement and verify that the correct facility is selected:
+yugabyte=# show syslog_facility;
+syslog_facility
+-----------------
+local0
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.9: Ensure syslog messages are not suppressed</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement and confirm that the syslog_sequence_numbers
+is enabled (on):
+yugabyte=# show syslog_sequence_numbers;
+syslog_sequence_numbers
+-------------------------
+on
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.10: Ensure syslog messages are not lost due to size</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm that long log messages are split when
+logging to Syslog:
+yugabyte=# show syslog_split_messages;
+syslog_split_messages
+-----------------------
+on
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.11: Ensure the program name for YugabyteDB syslog messages is correct</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting syslog_ident: postgres</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the program name is set correctly:
+yugabyte=# show syslog_ident;
+syslog_ident
+--------------
+postgres
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.12: Ensure the correct messages are written to the server log </strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_min_messages: warning</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm the setting is correct:
+yugabyte=# show log_min_messages;
+log_min_messages
+------------------
+warning
+(1 row)
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.13: Ensure the correct YSQL statements generating errors are recorded</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_min_error_statement: error</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is correct:
+yugabyte=# show log_min_error_statement;
+log_min_error_statement
+-------------------------
+error
+(1 row)
+If not configured to at least ERROR, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.14: Ensure 'debug_print_parse' is disabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting debug_print_parse: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm the setting is correct:
+yugabyte=# show debug_print_parse;
+debug_print_parse
+-------------------
+off
+(1 row)
+If not configured to off, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.15: Ensure 'debug_print_rewritten' is disabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting debug_print_rewritten: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm the setting is disabled:
+yugabyte=# show debug_print_rewritten;
+debug_print_rewritten
+-----------------------
+off
+(1 row)
+If not configured to off, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.16: Ensure 'debug_print_plan' is disabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting debug_print_plan: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is disabled:
+yugabyte=# show debug_print_plan;
+debug_print_plan
+------------------
+off
+(1 row)
+If not configured to off, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.17: Ensure 'debug_pretty_print' is enabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting debug_pretty_print: on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to confirm the setting is enabled:
+yugabyte=# show debug_pretty_print;
+debug_pretty_print
+--------------------
+on
+(1 row)
+If not configured to on, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.18: Ensure 'log_connections' is enabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_connections: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is enabled:
+yugabyte=# show log_connections;
+log_connections
+-----------------
+off
+(1 row)
+If not configured to on, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.19: Ensure 'log_disconnections' is enabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_disconnections: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is enabled:
+yugabyte=# show log_disconnections;
+log_disconnections
+--------------------
+off
+(1 row)
+If not configured to on, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.20: Ensure 'log_error_verbosity' is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_error_verbosity: default</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is correct:
+yugabyte=# show log_error_verbosity;
+log_error_verbosity
+---------------------
+default
+(1 row)
+If not configured to verbose, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.21: Ensure 'log_hostname' is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_hostname: off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is correct:
+yugabyte=# show log_hostname;
+log_hostname
+--------------
+off
+(1 row)
+If not configured to off, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.22: Ensure 'log_line_prefix' is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_line_prefix: %m [%p] </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is correct:
+yugabyte=# show log_line_prefix;
+log_line_prefix
+-----------------
+%m [%p]
+(1 row)
+If the prefix does not at a minimum include %m [%p]: [%l-1]
+db=%d,user=%u,app=%a,client=%h, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.23: Ensure 'log_statement' is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_statement: none</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the setting is correct:
+yugabyte=# show log_statement;
+log_statement
+---------------
+none
+(1 row)
+If log_statement is set to none then this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.1.24: Ensure 'log_timezone' is set correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting log_timezone: UTC</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement:
+yugabyte=# show log_timezone;
+log_timezone
+--------------
+UTC
+(1 row)
+If log_timezone is not set to GMT, UTC, or as defined by your organization's logging policy
+this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control info">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.2: Ensure the YugbayteDB Audit Extension (pgAudit) is enabled</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge INFO">INFO</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Logging setting shared_preload_libraries: pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify pgAudit is enabled:
+yugabyte=# show shared_preload_libraries ;
+shared_preload_libraries
+-------------------------------------------------------
+pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan
+(1 row)
+If the output does not contain pgaudit, this is a fail.
+Next, verify that desired auditing components are enabled:
+yugabyte=# show pgaudit.log;
+pgaudit.log
+-------------
+none
+(1 row)
+If the output does not contain the desired auditing components, this is a fail.
+The list below summarizes pgAudit.log components:
+READ: SELECT and COPY when the source is a relation or a query.
+WRITE: INSERT, UPDATE, DELETE, TRUNCATE, and COPY when the destination is a relation.
+FUNCTION: Function calls and DO blocks.
+ROLE: Statements related to roles and privileges: GRANT, REVOKE, CREATE/ALTER/DROP
+ROLE.
+DDL: All DDL that is not included in the ROLE class.
+MISC: Miscellaneous commands, e.g. DISCARD, FETCH, CHECKPOINT, VACUUM.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>3.3: Ensure that auditing is enabled for YCQL</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Run the following command to verify whether auditing is enabled on the YCQL interface
+of the YugabyteDB server.
+cat ts.config | grep ycql_enable_audit_log
+If not configured to true, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>User Access and Authorization <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>4.1: Ensure sudo is configured correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Log in as an Operating System user authorized to escalate privileges and test the sudo
+invocation by executing the following:
+whoami user1
+# groups user1
+# sudo su - yugabyte
+[sudo] password for user1:
+user1 is not in the sudoers file. This incident will be reported.
+As shown above, user1 has not been added to the /etc/sudoers file or made a member
+of any group listed in the /etc/sudoers file. Whereas:
+# whoami user2
+# groups user2 dba
+# sudo su - yugabyte [sudo] password for user2:
+# whoami
+yugabyte
+This shows that the user2 user is configured properly for sudo access by being a
+member of the dba group.
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Access Control and Password Policies <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>5.1: Ensure that authentication is enabled for YCQL interface of the YugabyteDB</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Run the following command to verify whether authentication is enabled on the YCQL
+interface of the YugabyteDB server.
+The YugabyteDB configuration files can be found in the conf directory of tarballs. For
+packages, the configuration files will be located in /home/user/var/conf.
+cat ts.config | grep use_cassandra_authentication
+If use_cassandra_authentication is set to false, then this is a finding.
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Connection and Login <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>6.1: Ensure login via local UNIX Domain Socket is configured correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Newly created data clusters are empty of data and have two user accounts, the
+superusers yugabyte and postgres. By default, the data cluster superuser is named
+after the UNIX account yugabyte. Login authentication is tested via UNIX DOMAIN
+SOCKETS by the UNIX user account yugabyte, the default account, and set_user has
+not yet been configured:
+# ./bin/yugabyte
+yugabyte=#
+Login attempts by another UNIX user account as the superuser should be denied:
+# su - user1 # whoami user1
+# ./bin/ysqlsh -U yugabyte -d yugabyte
+ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+# exit
+This test demonstrates that not only is logging in as the superuser blocked, but so is
+logging in as another user:
+# su - user2 # whoami user2
+# ./bin/ysqlsh -U yugabyte -d yugabyte
+ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+# ./bin/ysqlsh -U user1 -d yugabyte
+ysqlsh: FATAL: Peer authentication failed for user "user1"
+# ./bin/ysqlsh -U user2 -d yugabyte
+yugabyte=#
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>YugabyteDB Settings <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>7.1: Understanding attack vectors and runtime GFLAGs</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Review all configuration settings. Configure YugabyteDB logging to record all
+modifications and changes to the RDBMS.
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Special Configuration Considerations <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Warnings: 0</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control skip">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>8.1: Ensure base backups are configured and functional</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Verify snapshots exist by executing the list_snapshots command, as follows:
+./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
+All the snapshots in the cluster are listed, along with their statuses.
+Snapshot UUID State Creation Time
+0d4b4935-2c95-4523-95ab-9ead1e95e794 COMPLETE 2023-04-20
+00:20:38.214201
+</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        
+    </div>
+    
+    <script>
+        function toggleSection(element) {
+            const container = element.parentElement.querySelector('.controls-container');
+            const chevron = element.querySelector('.chevron');
+
+            container.classList.toggle('expanded');
+            chevron.classList.toggle('rotated');
+        }
+
+        function toggleControl(element) {
+            const body = element.nextElementSibling;
+            const chevron = element.querySelector('.chevron');
+
+            body.classList.toggle('expanded');
+            chevron.classList.toggle('rotated');
+        }
+
+        // Auto-expand failed sections with animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const failedSections = document.querySelectorAll('.section-summary');
+            failedSections.forEach((section, index) => {
+                const failedControls = section.querySelectorAll('.control.fail');
+                if (failedControls.length > 0) {
+                    setTimeout(() => {
+                        const header = section.querySelector('.section-header');
+                        toggleSection(header);
+                    }, index * 200); // Stagger the animations
+                }
+            });
+
+            // Add smooth scrolling to all internal links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // Close all expanded sections
+                document.querySelectorAll('.controls-container.expanded').forEach(container => {
+                    const header = container.previousElementSibling;
+                    toggleSection(header);
+                });
+
+                document.querySelectorAll('.control-body.expanded').forEach(body => {
+                    const header = body.previousElementSibling;
+                    toggleControl(header);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
