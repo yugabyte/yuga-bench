@@ -13,5 +13,12 @@ autopep8 = "~=2.0.0"
 isort = "~=5.10.1"
 mypy = "~=0.990"
 
+[packages]
+psycopg2-binary = "~=2.9.10"
+PyYAML = "~=6.0"
+requests = "~=2.31.0"
+asyncio = "~=3.4.3"
+regex = "~=2025.9.1"
+
 [requires]
 python_version = "3.11"

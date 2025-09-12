@@ -1,27 +1,16 @@
-DOCKER_HUB_REPO?=yugabytedb
-DOCKER_HUB_REGISTRY_IMAGE?=yuga-bench
-DOCKER_HUB_REGISTRY_TAG?=latest
-
-YUGA_BENCH_REGISTRY_IMG=$(DOCKER_HUB_REPO)/$(DOCKER_HUB_REGISTRY_IMAGE):$(DOCKER_HUB_REGISTRY_TAG)
-
-RELEASE_VER := v1.0.0
+RELEASE_VER := 1.0.0
 BASE_DIR    := $(shell git rev-parse --show-toplevel)
 GIT_SHA     := $(shell git rev-parse --short HEAD)
 VERSION     := $(RELEASE_VER)-$(GIT_SHA)
+PYTHON 		:= python3
 
-ifneq ($(NO_CACHE),)
-DOCKER_NO_CACHE = --no-cache
-endif
+all: run
 
-export DOCKER_BUILDKIT?=1
+run:
+	$(PYTHON) yuga_bench.py --host localhost --port 5433 --user yugabyte --output-format html
 
-all: image-build
-
-image-build:
-	@echo "Building container: docker build --progress=plain --tag $(YUGA_BENCH_REGISTRY_IMG) -f Dockerfile ."
-	docker build --progress=plain --tag $(YUGA_BENCH_REGISTRY_IMG) --build-arg build_version=$(VERSION) --build-arg DOCKER_HUB_IMAGE_TAG=$(DOCKER_HUB_REGISTRY_TAG) -f Dockerfile .
-	@echo "Build successfully completed"
-	docker rm $(DOCKER_HUB_REGISTRY_IMAGE)-pipenv; \
+pipenv-lock:
+	pipenv lock 
 
 dev-install:
 	pipenv install --dev --verbose
@@ -43,5 +32,3 @@ commit-check: sort-imports format lint
 run-pre-commit: dev-install pre-commit-hook
 	pipenv run pre-commit run --all-files
 
-push-image: image-build
-	docker push $(YUGA_BENCH_REGISTRY_IMG)

@@ -956,7 +956,7 @@ controls:
     cis_controls:
       -
 
-  - id: "3.1.25"
+  - id: "3.2"
     title: "Ensure the YugbayteDB Audit Extension (pgAudit) is enabled"
     profile_applicability:
       - "Level 1 - Yugabyte"
@@ -1026,7 +1026,7 @@ controls:
     cis_controls:
       -
 
-  - id: "3.1.26"
+  - id: "3.3"
     title: "Ensure that auditing is enabled for YCQL"
     profile_applicability:
       - "Level 1 - Yugabyte"

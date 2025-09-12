@@ -192,6 +192,8 @@ class LoggingMonitoringChecker(BaseChecker):
             return self._check_boolean_setting(control, True, 'log_connections')
         elif "log_disconnections" in control.audit.lower():
             return self._check_boolean_setting(control, True, 'log_disconnections')
+        elif "log_truncate_on_rotation" in control.audit.lower():
+            return self._check_boolean_setting(control, True, 'log_truncate_on_rotation')
         elif "log_line_prefix" in control.audit.lower():
             return self._check_log_line_prefix(control)
         else:
