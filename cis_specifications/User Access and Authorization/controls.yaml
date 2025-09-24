@@ -52,3 +52,180 @@ controls:
       -
     cis_controls:
       -
+
+  - id: "4.2"
+    title: "Ensure excessive administrative privileges are revoked"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      With respect to YugabyteDB administrative YSQL commands, only superusers should
+      have elevated privileges. YugabyteDB regular, or application, users should not possess
+      the ability to create roles, create new databases, manage replication, or perform any
+      other action deemed privileged. Typically, regular users should only be granted the
+      minimal set of privileges commensurate with managing the application:
+      • DDL (create table, create view, create index, etc.)
+      • DML (select, insert, update, delete)
+      Further, it has become best practice to create separate roles for DDL and DML. Given
+      an application called 'payroll', one would create the following users:
+      • payroll_owner
+      • payroll_user
+      Any DDL privileges would be granted to the payroll_owner account only, while DML
+      privileges would be given to the payroll_user account only. This prevents accidental
+      creation/altering/dropping of database objects by application code that runs as the
+      payroll_user account.
+    rationale: |
+      
+    audit: |
+      
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "4.3"
+    title: "Ensure excessive function privileges are revoked"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      In certain situations, to provide the required functionality, YugabyteDB needs to execute
+      internal logic (stored procedures, functions, triggers, etc.) and/or external code modules
+      with elevated privileges. However, if the privileges required for execution are at a higher
+      level than the privileges assigned to organizational users invoking the functionality
+      applications/programs, those users are indirectly provided with greater privileges than
+      assigned by their organization. This is known as privilege elevation. Privilege elevation
+      must be utilized only where necessary. Execute privileges for application functions
+      should be restricted to authorized users only.
+    rationale: |
+      
+    audit: |
+      Functions in YugabyteDB can be created with the SECURITY DEFINER option. When
+      SECURITY DEFINER functions are executed by a user, said function is run with the
+      privileges of the user who created it, not the user who is running it.
+      To list all functions that have SECURITY DEFINER, run the following YSQL:
+      # whoami root
+      # sudo su - yugabyte
+      # ysqlsh -c "SELECT nspname, proname, proargtypes, prosecdef, rolname,
+      proconfig FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid JOIN
+      pg_authid a ON a.oid = p.proowner WHERE prosecdef OR NOT proconfig IS NULL;"
+      In the query results, a prosecdef value of 't' on a row indicates that that function uses
+      privilege elevation.
+      If elevation privileges are utilized which are not required or are expressly forbidden by
+      organizational guidance, this is a fail.
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Automated"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "4.4"
+    title: "Ensure excessive DML privileges are revoked"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      DML (insert, update, delete) operations at the table level should be restricted to only
+      authorized users. YugabyteDB manages table-level DML permissions via the GRANT
+      statement.
+    rationale: |
+      Excessive DML grants can lead to unprivileged users changing or deleting information
+      without proper authorization.
+    audit: |
+      
+    remediation: |
+      
+    impact: |
+      
+    default_value: The table owner/creator has full privileges; all other users must be explicitly granted access.
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "4.5"
+    title: "Ensure Row Level Security (RLS) is configured correctly"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      In addition to the YSQL-standard privilege system available through GRANT, tables can
+      have row security policies that restrict, on a per-user basis, which individual rows can be
+      returned by normal queries or inserted, updated, or deleted by data modification
+      commands. This feature is also known as Row Level Security (RLS). By default, tables
+      do not have any policies, so if a user has access privileges to a table according to the
+      YSQL privilege system, all rows within it are equally available for querying or updating.
+      Row security policies can be specific to commands, to roles, or to both. A policy can be
+      specified to apply to ALL commands, or to any combination of SELECT, INSERT, UPDATE, or
+      DELETE. Multiple roles can be assigned to a given policy, and normal role membership
+      and inheritance rules apply. If you use RLS and apply restrictive policies to certain
+      users, it is important that the Bypass RLS privilege not be granted to any unauthorized
+      users. This privilege overrides RLS- enabled tables and associated policies. Generally,
+      only superusers and elevated users should possess this privilege.
+    rationale: |
+      If RLS policies and privileges are not configured correctly, users could perform actions
+      on tables that they are not authorized to perform, such as inserting, updating, or
+      deleting rows.
+    audit: |
+      
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "4.6"
+    title: "Make use of predefined roles"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB provides a set of predefined roles that provide access to certain,
+      commonly needed, privileged capabilities and information. Administrators can GRANT
+      these roles to users and/or other roles in their environment, providing those users with
+      access to the specified capabilities and information.
+    rationale: |
+      In keeping with the principle of least privilege, judicious use of the YugabyteDB
+      predefined roles can greatly limit the access to privileged, or superuser, access.
+    audit: |
+      Review the list of all database roles that have superuser access and determine if one or
+      more of the predefined roles would suffice for the needs of that role:
+      yugabyte=# select rolname from pg_roles where rolsuper is true;
+      rolname
+      ----------
+      postgres
+      yugabyte
+      (2 rows)
+    remediation: |
+      If you've determined that one or more of the predefined roles can be used, simply GRANT
+      it:
+      yugabyte=# GRANT pg_monitor TO yugabyte; GRANT ROLE
+      And then remove superuser from the account:
+      yugabyte=# ALTER ROLE yugabyte NOSUPERUSER; ALTER ROLE
+      yugabyte=# select rolname from pg_roles where rolsuper is true; rolname
+      yugabyte (1 row)
+    impact: |
+      
+    default_value: 
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 

@@ -19,7 +19,7 @@ The **yuga-bench** is an enterprise-grade security auditing solution that provid
 - **🎯 Comprehensive Coverage**: Complete implementation of CIS benchmarks for YugabyteDB
 - **📊 Multiple Report Formats**: Professional HTML, JSON, CSV, and console outputs
 
-## 📋 Security Control Categories
+### 📋 Security Control Categories
 
 Our tool systematically evaluates your YugabyteDB deployment across eight critical security domains:
 
@@ -95,7 +95,7 @@ python yuga_bench.py \
 
 ## 🔍 Troubleshooting
 
-#### Connection Problems
+### Connection Problems
 ```bash
 # Test connectivity
 telnet your-yugabyte-host 5433
@@ -107,7 +107,7 @@ psql -h your-yugabyte-host -p 5433 -U yugabyte -d yugabyte -c "SELECT version();
 yugabyted status --base_dir=/path/to/yb-data
 ```
 
-#### Permission Issues
+### Permission Issues
 ```sql
 -- Grant required permissions
 GRANT CONNECT ON DATABASE yugabyte TO audit_user;
@@ -120,13 +120,13 @@ GRANT SELECT ON pg_settings TO audit_user;
 - **[YugabyteDB Security Documentation](https://docs.yugabyte.com/latest/secure/)**
 - **[CIS Benchmarks Official Site](https://www.cisecurity.org/cis-benchmarks)**
 
-# Need Help?
+## ❓ Need Help?
 
 * You can ask questions, find answers, and help others on our Community [Slack](https://communityinviter.com/apps/yugabyte-db/register), [Forum](https://forum.yugabyte.com), [Stack Overflow](https://stackoverflow.com/questions/tagged/yugabyte-db), as well as Twitter [@Yugabyte](https://twitter.com/yugabyte)
 
 * Please use [GitHub issues](https://github.com/yugabyte/yuga-bench/issues) to report issues or request new features.
 
-# Contribute
+## 🤝 Contribute
 
 As an an open-source project with a strong focus on the user community, we welcome contributions as GitHub pull requests. See our [Contributor Guides](https://docs.yugabyte.com/preview/contribute/) to get going. Discussions and RFCs for features happen on the design discussions section of our [Forum](https://forum.yugabyte.com).
 

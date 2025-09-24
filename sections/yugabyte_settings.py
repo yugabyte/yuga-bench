@@ -52,7 +52,7 @@ class YugabyteSettingsChecker(BaseChecker):
             found_security = [lib for lib in libraries if any(sec in lib.lower() for sec in security_libs)]
 
             if found_risky:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Potentially risky libraries loaded: {', '.join(found_risky)}",
                                                 expected="Security-relevant extensions only",
                                                 actual=shared_preload_libs)
@@ -93,7 +93,7 @@ class YugabyteSettingsChecker(BaseChecker):
         enable_seqscan = self.db.get_setting('enable_seqscan')
 
         if enable_seqscan == 'off':
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             "Sequential scans are disabled - may cause performance issues",
                                             expected="on (unless specifically required)",
                                             actual=enable_seqscan)
@@ -212,7 +212,7 @@ class YugabyteSettingsChecker(BaseChecker):
                                                         expected="0.5-0.9",
                                                         actual=setting_value)
                     else:
-                        return self._create_warn_result(control,
+                        return self._create_fail_result(control,
                                                         f"Checkpoint completion target outside recommended range: {setting_value}",
                                                         expected="0.5-0.9",
                                                         actual=setting_value)

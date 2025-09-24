@@ -44,7 +44,7 @@ class AccessControlChecker(BaseChecker):
                                                 expected="scram-sha-256",
                                                 actual=password_encryption)
             elif password_encryption == 'md5':
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 "Password encryption using MD5 - consider upgrading to SCRAM-SHA-256",
                                                 expected="scram-sha-256",
                                                 actual=password_encryption)
@@ -95,7 +95,7 @@ class AccessControlChecker(BaseChecker):
         try:
             timeout_ms = int(setting_value)
             if timeout_ms == 0:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 "Idle transaction session timeout is disabled",
                                                 expected="Non-zero timeout (e.g., 30000ms = 30s)",
                                                 actual="0 (disabled)")
@@ -123,7 +123,7 @@ class AccessControlChecker(BaseChecker):
         try:
             timeout_ms = int(setting_value)
             if timeout_ms == 0:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 "Statement timeout is disabled - long-running queries may impact system",
                                                 expected="Non-zero timeout for production systems",
                                                 actual="0 (disabled)")
@@ -159,7 +159,7 @@ class AccessControlChecker(BaseChecker):
                                             expected="TCP keepalives enabled",
                                             actual=settings_str)
         else:
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             "TCP keepalive settings not configured - may affect connection management",
                                             expected="TCP keepalives enabled",
                                             actual="All keepalive settings disabled or default")
@@ -177,7 +177,7 @@ class AccessControlChecker(BaseChecker):
 
             if createrole_users and len(createrole_users) > 0:
                 user_names = [user['rolname'] for user in createrole_users]
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Non-superuser accounts with CREATEROLE privilege: {', '.join(user_names)}",
                                                 expected="Limited CREATEROLE privileges",
                                                 actual=f"{len(user_names)} accounts with CREATEROLE")

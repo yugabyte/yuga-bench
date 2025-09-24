@@ -49,7 +49,7 @@ class SpecialConfigurationChecker(BaseChecker):
             extensions = self.db.execute_query(extensions_query)
 
             if not extensions:
-                return self._create_warn_result(control, "Could not retrieve available extensions")
+                return self._create_fail_result(control, "Could not retrieve available extensions")
 
             extension_names = [ext['name'] for ext in extensions]
             extension_count = len(extension_names)
@@ -59,7 +59,7 @@ class SpecialConfigurationChecker(BaseChecker):
             found_risky = [ext for ext in extension_names if ext in risky_extensions]
 
             if found_risky:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Potentially risky extensions available: {', '.join(found_risky[:5])}",
                                                 expected="Minimal extensions available",
                                                 actual=f"{extension_count} extensions, risky: {len(found_risky)}")
@@ -129,7 +129,7 @@ class SpecialConfigurationChecker(BaseChecker):
         cluster_name = self.db.get_setting('cluster_name')
 
         if not cluster_name or cluster_name.strip() == '':
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             "Cluster name is not set - consider setting for identification",
                                             expected="Descriptive cluster name",
                                             actual="Not set")
@@ -154,7 +154,7 @@ class SpecialConfigurationChecker(BaseChecker):
                                             expected="replica or logical",
                                             actual=wal_level)
         elif wal_level == 'minimal':
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             "WAL level set to minimal - may limit backup and replication options",
                                             expected="replica or logical",
                                             actual=wal_level)
@@ -174,7 +174,7 @@ class SpecialConfigurationChecker(BaseChecker):
             senders_count = int(max_wal_senders)
 
             if senders_count == 0:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 "WAL senders disabled - replication not possible",
                                                 expected="Appropriate for replication needs",
                                                 actual="0")
@@ -254,7 +254,7 @@ class SpecialConfigurationChecker(BaseChecker):
             target_value = int(default_statistics_target)
 
             if target_value < 10:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Very low statistics target: {default_statistics_target}",
                                                 expected="10-1000",
                                                 actual=default_statistics_target)
@@ -308,7 +308,7 @@ class SpecialConfigurationChecker(BaseChecker):
                                             expected="on",
                                             actual=ssl_prefer_server_ciphers)
         else:
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             "Server cipher preferences not enabled - may allow weak ciphers",
                                             expected="on",
                                             actual=ssl_prefer_server_ciphers or "off")
@@ -322,5 +322,5 @@ class SpecialConfigurationChecker(BaseChecker):
         setting_name = self._extract_setting_name_from_audit(control.audit)
 
         # TODO: Implement this function.
-        return self._create_warn_result(control, "Verify cluster settings",
+        return self._create_fail_result(control, "Verify cluster settings",
                                         expected="on", actual=ssl_prefer_server_ciphers or "off")

@@ -81,7 +81,22 @@ class LoggingMonitoringChecker(BaseChecker):
 
     def _check_log_truncate_on_rotation(self, control: CISControl) -> ControlResult:
         """Check log truncate on rotation setting"""
-        return self._check_boolean_setting(control, True, 'log_truncate_on_rotation')
+        setting_name = 'log_truncate_on_rotation'
+        setting_value = self.db.get_setting(setting_name)
+
+        if not setting_value:
+            return self._create_fail_result(control, f"Could not retrieve {setting_name} setting")
+
+        if setting_value == 'off':
+            return self._create_fail_result(control,
+                                            f"Log truncate on rotation is disabled: {setting_value}",
+                                            expected="on",
+                                            actual=str(setting_value))
+        else:
+            return self._create_pass_result(control,
+                                            f"Log truncate on rotation is configured: {setting_value}",
+                                            expected="on",
+                                            actual=str(setting_value))
 
     def _check_log_file_lifetime(self, control: CISControl) -> ControlResult:
         """Check log file lifetime settings"""
@@ -93,7 +108,7 @@ class LoggingMonitoringChecker(BaseChecker):
 
         # Check if rotation age is configured (not 0)
         if setting_value == '0' or setting_value == 0:
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             f"Log rotation age is disabled: {setting_value}",
                                             expected="Non-zero rotation age",
                                             actual=str(setting_value))
@@ -113,7 +128,7 @@ class LoggingMonitoringChecker(BaseChecker):
 
         # Check if rotation size is configured (not 0)
         if setting_value == '0' or setting_value == 0:
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             f"Log rotation size is disabled: {setting_value}",
                                             expected="Non-zero rotation size",
                                             actual=str(setting_value))
@@ -155,7 +170,7 @@ class LoggingMonitoringChecker(BaseChecker):
             issues.append("log_rotation_size is not configured")
 
         if issues:
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             f"Log rotation may not prevent message loss: {', '.join(issues)}",
                                             expected="Both rotation age and size configured",
                                             actual=f"age={rotation_age}, size={rotation_size}")
@@ -174,7 +189,7 @@ class LoggingMonitoringChecker(BaseChecker):
         elif "log_min_duration_statement" in control.audit.lower():
             setting_value = self.db.get_setting('log_min_duration_statement')
             if setting_value == '-1':
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 "Statement duration logging is disabled",
                                                 expected="Non-negative value (ms)",
                                                 actual="-1 (disabled)")
