@@ -28,10 +28,164 @@ controls:
 
     impact: |
 
-    default_value:
+    default_value: N/A
     type: "Manual"
     references:
       -
       -
     cis_controls:
       -
+
+  - id: "8.2"
+    title: "Ensure YugabyteDB configuration files are outside the data cluster"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB configuration files within the data cluster's directory tree can be changed
+      by anyone logging into the data cluster as the superuser, i.e. yugabyte. As a matter of
+      default policy, configuration files such as ysql_pg.conf, ysql_hba.conf, and pg_ident,
+      are placed in the data cluster's directory, $PGDATA. YugabyteDB can be configured to
+      relocate these files to locations outside the data cluster which cannot then be altered by
+      an ordinary superuser login session.
+    rationale: |
+      Leaving YugabyteDB configuration files within the data cluster's directory tree increases
+      the chances that they will be inadvertently or intentionally altered.
+    audit: |
+      Execute the following commands to verify the configuration is correct:
+      yugabyte=# select name, setting from pg_settings where name ~ '.*_file$';
+      name | setting
+      --------------------+--------------------------------------------------------
+      -
+      config_file | /home/user/var/data/pg_data/ysql_pg.conf
+      external_pid_file |
+      hba_file | /home/user/var/data/pg_data/ysql_hba.conf
+      ident_file | /home/user/var/data/pg_data/pg_ident.conf
+      ssl_ca_file |
+      ssl_cert_file | server.crt
+      ssl_crl_file |
+      ssl_dh_params_file |
+      ssl_key_file | server.key
+      (9 rows)
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      The defaults for YugabyteDB configuration files are listed below.
+      name | setting
+      ----------------------+----------------------------------------
+      config_file | /var/lib/pgsql/14/data/ysql_pg.conf
+      external_pid_file |
+      hba_file | /var/lib/pgsql/14/data/ysql_hba.conf
+      ident_file | /var/lib/pgsql/14/data/pg_ident.conf
+      promote_trigger_file |
+      ssl_ca_file |
+      ssl_cert_file | server.crt
+      ssl_crl_file |
+      ssl_dh_params_file |
+      ssl_key_file | server.key
+      (10 rows)
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "8.3"
+    title: "Ensure YugabyteDB subdirectory locations are outside the data cluster"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      The YugbayteDB cluster is organized to carry out specific tasks in subdirectories. For
+      the purposes of performance, reliability, and security some of these subdirectories
+      should be relocated outside the data cluster.
+    rationale: |
+      Some subdirectories contain information, such as logs, which can be of value to others
+      such as developers. Other subdirectories can gain a performance benefit when placed
+      on fast storage devices. Finally, relocating a subdirectory to a separate and distinct
+      partition mitigates denial of service and involuntary server shutdown when excessive
+      writes fill the data cluster's partition, e.g. fs_data_dir, fs_wal_dir and log_dir.
+    audit: |
+      Execute the following YSQL statement to verify the configuration is correct.
+      Alternatively, inspect the parameter settings in the ysql_pg.conf configuration file.
+      yugabyte=# select name, setting from pg_settings where (name ~
+      '_directory$');
+      name | setting
+      ----------------------+------------------------------------------------------
+      --
+      data_directory | /home/user/var/data/pg_data
+      default_tablespace |
+      log_directory | /home/user/var/data/yb-data/tserver/logs
+      stats_temp_directory | pg_stat_tmp
+      temp_tablespaces |
+      (5 rows)
+      Inspect the file and directory permissions for all returned values. Only superusers and
+      authorized users should have access control rights for these files and directories. If
+      permissions are not highly restrictive, this is a fail.
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      The default for data_directory is ConfigDir and the default for log_directory is log
+      (based on absolute path of data_directory).
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "8.4"
+    title: "Ensure miscellaneous configuration settings are correct"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      This recommendation covers non-regular, special files, and dynamic libraries.
+      YugabyteDB permits local logins via the UNIX DOMAIN SOCKET and, for the most
+      part, anyone with a legitimate Unix login account can make the attempt. Limiting
+      YugabyteDB login attempts can be made by relocating the UNIX DOMAIN SOCKET to
+      a subdirectory with restricted permissions.
+      The creation and implementation of user-defined dynamic libraries is an extraordinary
+      powerful capability. In the hands of an experienced DBA/programmer, it can significantly
+      enhance the power and flexibility of the RDBMS; but new and unexpected behavior can
+      also be assigned to the RDBMS, resulting in a very dangerous environment in what
+      should otherwise be trusted.
+    rationale: |
+      
+    audit: |
+      Execute the following YSQL statement to verify the configuration is correct.
+      Alternatively, inspect the parameter settings in the ysql_pg.conf configuration file.
+      yugabyte=# select name, setting from pg_settings where name in
+      ('external_pid_file',
+      'unix_socket_directories','shared_preload_libraries','dynamic_library_path','
+      local_preload_libraries','session_preload_libraries');
+      name | setting
+      ---------------------------+-------------------------------------------------
+      ------
+      dynamic_library_path | $libdir
+      external_pid_file |
+      local_preload_libraries |
+      session_preload_libraries |
+      shared_preload_libraries |
+      pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan
+      unix_socket_directories | /tmp/
+      (6 rows)
+      Inspect the file and directory permissions for all returned values. Only superusers
+      should have access control rights for these files and directories. If permissions are not
+      highly restricted, this is a fail.
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      The dynamic_library_path default is $libdir and unix_socket_directories default is
+      /tmp. The default for external_pid_file and all library parameters are initially null, or
+      not set, upon cluster creation.
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 

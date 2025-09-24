@@ -48,7 +48,7 @@ class UserAccessChecker(BaseChecker):
             if len(superuser_names) == 0:
                 return self._create_fail_result(control, "No superuser accounts found")
             elif len(superuser_names) > 3:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Many superuser accounts found: {', '.join(superuser_names)}",
                                                 expected="Limited number of superusers",
                                                 actual=f"{len(superuser_names)} superusers")
@@ -93,7 +93,7 @@ class UserAccessChecker(BaseChecker):
                     issues.append(f"{user_name}: {', '.join(dangerous_privs)}")
 
             if issues:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Users with elevated privileges: {'; '.join(issues)}",
                                                 expected="Minimal privileges for non-superusers",
                                                 actual=f"{len(issues)} users with elevated privileges")
@@ -124,7 +124,7 @@ class UserAccessChecker(BaseChecker):
 
             # Check if roles are being used for privilege management
             if role_count == 0:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 "No roles defined - consider using roles for privilege management",
                                                 expected="Use of roles for privilege management",
                                                 actual=f"{role_count} roles, {user_count} users")

@@ -21,13 +21,134 @@ controls:
       cat ts.config | grep use_cassandra_authentication
       If use_cassandra_authentication is set to false, then this is a finding.
     remediation: |
-
+      Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+      following GFLAG to YB-TServer:
+      ./bin/yb-tserver --use_cassandra_authentication=true
     impact: |
 
-    default_value:
-    type: "Manual"
+    default_value: false
+    type: "Automated"
     references:
       -
       -
     cis_controls:
       -
+
+  - id: "5.2"
+    title: "Ensure that the default password changed for the cassandra role"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      The cassandra role has a default password which must be changed.
+    rationale: |
+      Failure to change the default password for the cassandra role may pose a risk to the
+      database in the form of unauthorized access.
+    audit: |
+      Connect to YugabyteDB database via YCQL to verify whether the cassandra role has
+      default password.
+      ./bin/ycqlsh -u cassandra -p cassandra
+      If the connection is successful this is a finding.
+    remediation: |
+      Change the password for the cassandra role by issuing the following command:
+      cassandra@ycqlsh> ALTER ROLE cassandra WITH PASSWORD = 'new_password';
+      Where 'new_password' is replaced with the password of your choosing.
+      Verify the default password no longer works:
+      ./bin/ycqlsh -u cassandra -p cassandra
+      Connection error:
+      ... Provided username 'cassandra' and/or password are incorrect ...
+      You can now connect to the cluster using the new password:
+      ./bin/ycqlsh -u cassandra -p new_password
+    impact: |
+      
+    default_value: cassandra
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "5.3"
+    title: "Ensure the cassandra and superuser roles are separate"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      The default installation of YugabyteDB includes a superuser role named cassandra.
+      This necessitates the creation of a separate role to be the superuser role.
+    rationale: |
+      Superuser permissions allow for the creation, deletion, and permission management of
+      other users. Considering the Cassandra role is well known it should not be a superuser
+      or one which is used for any administrative tasks.
+    audit: |
+      To verify the configuration, run the following query:
+      cassandra@ycqlsh> SELECT role FROM system_auth.roles WHERE is_superuser =
+      True;
+      role
+      -----------
+      cassandra
+      (1 rows)
+      If cassandara or any unapproved role is returned, this is a finding.
+    remediation: |
+      
+    impact: |
+      The separate account must be created, assigned the superuser role, and tested for
+      correct functionality prior to removing the superuser role from the cassandra account.
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "5.4"
+    title: "Ensure there are no unnecessary roles or excessive privileges"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      Verify each role is required and has only the privileges needed to do its job.
+    rationale: |
+      Roles which are unneeded, have super user or other potentially excessive privileges
+      may be an avenue for a hacker to gain access to or modify data in the database.
+    audit: |
+      
+    remediation: |
+      
+    impact: |
+      
+    default_value: 
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "5.5"
+    title: "Ensure that YCQL only listens for network connections on authorized interfaces"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      The cql_proxy_bind_address GFLAG setting specifies the IP address and port for
+      YCQL interface. cql_proxy_bind_address should be set according to your organization's
+      approved IP address and ports policy.
+    rationale: |
+      Setting the address or interface to bind to will tell other YCQL applications (e.g. 'ycqlsh'
+      tool) to which address or interface to connect.
+    audit: |
+      Check the value of cql_proxy_bind_address in the ts.config. If
+      cql_proxy_bind_address is set to a non-authorized IP address or port, this is a finding.
+      cat ts.config | grep cql_proxy_bind_address
+    remediation: |
+      Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+      following GFLAG to YB-TServer:
+      ./bin/yb-tserver --cql_proxy_bind_address <ip address>:<port>
+    impact: |
+      
+    default_value: 0.0.0.0:9042 (127.0.0.1:9042)
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 

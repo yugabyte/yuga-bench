@@ -56,7 +56,6 @@ class HTMLReporter:
             --yugabyte-light-gray: #F5F7FA;
             --yugabyte-border: #E1E5E9;
             --success-green: #22C55E;
-            --warning-amber: #F59E0B;
             --error-red: #EF4444;
             --info-cyan: #06B6D4;
         }
@@ -181,10 +180,6 @@ class HTMLReporter:
             border-left-color: var(--error-red);
             background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, white 100%);
         }
-        .summary-card.warnings {
-            border-left-color: var(--warning-amber);
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, white 100%);
-        }
         .summary-card.skipped {
             border-left-color: var(--yugabyte-dark-gray);
             background: linear-gradient(135deg, rgba(45, 45, 45, 0.05) 0%, white 100%);
@@ -204,10 +199,6 @@ class HTMLReporter:
         .summary-card.failed h3 {
             color: var(--error-red);
             text-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
-        }
-        .summary-card.warnings h3 {
-            color: var(--warning-amber);
-            text-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
         }
         .summary-card.skipped h3 {
             color: var(--yugabyte-dark-gray);
@@ -317,10 +308,6 @@ class HTMLReporter:
             border-left: 5px solid var(--error-red);
             box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
         }
-        .control.warn {
-            border-left: 5px solid var(--warning-amber);
-            box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.1);
-        }
         .control.skip {
             border-left: 5px solid var(--yugabyte-dark-gray);
             box-shadow: 0 0 0 1px rgba(45, 45, 45, 0.1);
@@ -375,12 +362,6 @@ class HTMLReporter:
             background: linear-gradient(135deg, var(--error-red) 0%, #dc2626 100%);
             color: white;
             box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        }
-
-        .status-badge.WARN {
-            background: linear-gradient(135deg, var(--warning-amber) 0%, #d97706 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
         }
 
         .status-badge.SKIP {
@@ -533,10 +514,6 @@ class HTMLReporter:
                 <h3>{report.failed}</h3>
                 <p>Failed</p>
             </div>
-            <div class="summary-card warnings">
-                <h3>{report.warnings}</h3>
-                <p>Warnings</p>
-            </div>
             <div class="summary-card skipped">
                 <h3>{report.skipped}</h3>
                 <p>Skipped</p>
@@ -619,7 +596,6 @@ class HTMLReporter:
                         <div class="section-stat">Total: {section.total_controls}</div>
                         <div class="section-stat">Passed: {section.passed}</div>
                         <div class="section-stat">Failed: {section.failed}</div>
-                        <div class="section-stat">Warnings: {section.warnings}</div>
                         <div class="section-stat">Pass Rate: {section.pass_percentage:.1f}%</div>
                     </div>
                     <div class="progress-bar">

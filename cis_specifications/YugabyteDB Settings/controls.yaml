@@ -23,10 +23,286 @@ controls:
 
     impact: |
 
-    default_value:
+    default_value: N/A
     type: "Manual"
     references:
       -
       -
     cis_controls:
       -
+
+  - id: "7.2"
+    title: "Ensure 'backend' runtime parameters are configured correctly"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      In order to serve multiple clients efficiently, the YugabyteDB server server launches a
+      new "backend" process for each client. The runtime parameters in this benchmark
+      section are controlled by the backend process. The server's performance, in the form of
+      slow queries causing a denial of service, and the RDBM's auditing abilities for
+      determining root cause analysis can be compromised via these parameters.
+    rationale: |
+      A denial of service is possible by denying the use of indexes and by slowing down client
+      access to an unreasonable level. Unsanctioned behavior can be introduced by
+      introducing rogue libraries which can then be called in a database session. Logging can
+      be altered and obfuscated inhibiting root cause analysis.
+    audit: |
+      Issue the following command to verify the backend runtime parameters are configured
+      correctly:
+      yugabyte=# SELECT name, setting FROM pg_settings WHERE context IN
+      ('backend','superuser-backend') ORDER BY 1;
+      name | setting
+      -----------------------+---------
+      ignore_system_indexes | off
+      jit_debugging_support | off
+      jit_profiling_support | off
+      log_connections | off
+      log_disconnections | off
+      post_auth_delay | 0
+      (6 rows)
+      Note: Effecting changes to these parameters can only be made at server start.
+      Therefore, a successful exploit may not be detected until after a server restart, e.g.,
+      during a maintenance window.
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Automated"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.3"
+    title: "Ensure 'Postmaster' Runtime Parameters are Configured"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB runtime parameters that are executed by the postmaster process.
+    rationale: |
+      The postmaster process is the supervisory process that assigns a backend process to
+      an incoming client connection. The postmaster manages key runtime parameters that
+      are either shared by all backend connections or needed by the postmaster process
+      itself to run.
+    audit: |
+      The following parameters can only be set at server start by the owner of the
+      YugabyteDB server process and cluster, typically the UNIX user account yugabyte.
+      Therefore, all exploits require the successful compromise of either that UNIX account or
+      the postgres superuser account itself.
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.4"
+    title: "Ensure 'SIGHUP' Runtime Parameters are Configured"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB runtime parameters that are executed by the SIGHUP signal.
+    rationale: |
+      In order to define server behavior and optimize server performance, the server's
+      superuser has the privilege of setting these parameters which are found in the
+      configuration files ysql_pg.conf and ysql_hba.conf.
+    audit: |
+      The following parameters can be set at any time, without interrupting the server, by the
+      owner of the postmaster server process and cluster (typically UNIX user account
+      yugabyte).
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.5"
+    title: "Ensure 'Superuser' Runtime Parameters are Configured"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB runtime parameters that can only be executed by the server's
+      superuser,yugabyte.
+    rationale: |
+      In order to improve and optimize server performance, the server's superuser has the
+      privilege of setting these parameters which are found in the configuration file
+      ysql_pg_conf_csv.
+    audit: |
+      The following parameters can only be set at server start by the owner of the
+      YugabyteDB server process and cluster i.e. typically UNIX user account yugabyte.
+      Therefore, all exploits require the successful compromise of either that UNIX account or
+      the yugabyte superuser account itself.
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.6"
+    title: "Ensure 'User' Runtime Parameters are Configured"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      These YugabyteDB runtime parameters are managed at the user account (ROLE) level.
+    rationale: |
+      In order to improve performance and optimize features, a ROLE has the privilege of
+      setting numerous parameters in a transaction, session, or entity attribute. Any ROLE can
+      alter any of these parameters.
+    audit: |
+      The method used to analyze the state of ROLE runtime parameters and to determine if
+      they have been compromised is to inspect all catalogs and list attributes for database
+      entities such as ROLEs and databases.
+    remediation: |
+      
+    impact: |
+      
+    default_value: N/A
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.7"
+    title: "Ensure TLS is enabled and configured correctly: server to server"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB clusters can be configured to use server-to-server encryption to protect
+      data in transit between YugabyteDB servers. When enabled, Transport Layer Security
+      (TLS), the successor to the deprecated Secure Sockets Layer (SSL), is used to ensure
+      data protection for YSQL and YCQL only. Note that there is no planned support for
+      YEDIS.
+    rationale: |
+      If TLS is not enabled and configured correctly, this increases the risk of data being
+      compromised in transit.
+    audit: |
+      To determine whether TLS is enabled, simply query the parameter value while logged
+      into the database.
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      Note that server.crt and server.key are the default names used by YugabyteDB.
+      These files can be named otherwise, just ensure you update the ysql_pg_conf_csv to
+      use these new names. The current names can be found via YSQL:
+      yugabyte=# Select name, setting from pg_settings where name like 'ssl%file';
+      name | setting
+      --------------------+------------
+      ssl_ca_file |
+      ssl_cert_file | server.crt
+      ssl_crl_file |
+      ssl_dh_params_file |
+      ssl_key_file | server.key
+      (5 rows)
+    type: "Automated"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.8"
+    title: "Ensure TLS is enabled and configured correctly: client to server"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB clusters can be configured to use client-to-server encryption to protect
+      data in transit between YugabyteDB servers and clients, tools, and APIs. When
+      enabled, Transport Layer Security (TLS), the successor to the deprecated Secure
+      Sockets Layer (SSL), is used to ensure data protection for YSQL and YCQL only. Note
+      that there is no planned support for YEDIS.
+      Before you can enable client-to-server encryption, you first must enable server-to-server
+      encryption.
+    rationale: |
+      If TLS is not enabled and configured correctly, this increases the risk of data being
+      compromised in transit.
+    audit: |
+      To determine whether TLS is enabled, simply query the parameter value while logged
+      into the database.
+      yugabyte=# SHOW ssl;
+      ssl
+      -----
+      off
+      (1 row)
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      Note that server.crt and server.key are the default names used by YugabyteDB.
+      These files can be named otherwise, just ensure you update the ysql_pg_conf_csv to
+      use these new names. The current names can be found via YSQL:
+      yugabyte=# Select name, setting from pg_settings where name like 'ssl%file';
+      name | setting
+      --------------------+------------
+      ssl_ca_file |
+      ssl_cert_file | server.crt
+      ssl_crl_file |
+      ssl_dh_params_file |
+      ssl_key_file | server.key
+      (5 rows)
+    type: "Automated"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
+
+  - id: "7.9"
+    title: "Ensure the pgcrypto extension is installed and configured correctly"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      YugabyteDB must implement cryptographic mechanisms to prevent unauthorized
+      disclosure or modification of organization-defined information at rest (to include, at a
+      minimum, PII and classified information) on organization-defined information system
+      components.
+    rationale: |
+      
+    audit: |
+      One possible way to encrypt data within YugabyeDB is to use the pgcrypto extension.
+      To check if pgcrypto is installed on YugabyteDB, as a database administrator run the
+      following commands:
+      yugabyte=# SELECT * FROM pg_available_extensions WHERE name='pgcrypto';
+      name | default_version | installed_version | comment
+      ----------+-----------------+-------------------+-------------------------
+      pgcrypto | 1.3 | | cryptographic functions
+      (1 row)
+      If data in the database requires encryption and pgcrypto is not available, this is a fail.
+      If disk or filesystem requires encryption, ask the system owner, DBA, and SA to
+      demonstrate the use of disk-level encryption. If this is required and is not found, this is a
+      fail. If controls do not exist or are not enabled, this is also a fail.
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      pgcrypto is pre-bundled with standard YugabyteDB distribution but requires installation.
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 

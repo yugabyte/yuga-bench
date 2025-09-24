@@ -17,11 +17,11 @@ class InstallationPatchesChecker(BaseChecker):
 
         try:
             if control_id.startswith("1.1"):
-                return self._check_installation_version(control)
+                return self._check_packages_from_authorized_repo(control)
             elif control_id.startswith("1.2"):
-                return self._check_patches_updates(control)
+                return self._check_systemd_service_enabled(control)
             elif control_id.startswith("1.3"):
-                return self._check_installation_integrity(control)
+                return self._check_cluster_initialized(control)
             else:
                 return self._check_generic_installation(control)
         except Exception as e:
@@ -72,6 +72,18 @@ class InstallationPatchesChecker(BaseChecker):
 
         except Exception as e:
             return self._create_fail_result(control, f"Error checking patches: {str(e)}")
+
+    def _check_cluster_initialized(self, control: CISControl) -> ControlResult:
+        """Check data cluster initialized successfully"""
+        return self._create_skip_result(control, "TODO - Implementation pending")
+
+    def _check_packages_from_authorized_repo(self, control: CISControl) -> ControlResult:
+        """Check packages are obtained from authorized repository"""
+        return self._create_skip_result(control, "Manual - TODO - Implementation pending")
+
+    def _check_systemd_service_enabled(self, control: CISControl) -> ControlResult:
+        """Check systemd service files enabled"""
+        return self._create_skip_result(control, "Manual - TODO - Implementation pending")
 
     def _check_installation_integrity(self, control: CISControl) -> ControlResult:
         """Check installation integrity"""

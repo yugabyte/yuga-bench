@@ -90,12 +90,12 @@ class ConnectionLoginChecker(BaseChecker):
             max_conn_int = int(max_connections)
 
             if max_conn_int < 10:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Very low max_connections setting: {max_connections}",
                                                 expected="Reasonable connection limit (≥10)",
                                                 actual=max_connections)
             elif max_conn_int > 1000:
-                return self._create_warn_result(control,
+                return self._create_fail_result(control,
                                                 f"Very high max_connections setting: {max_connections} - may impact performance",
                                                 expected="Reasonable connection limit (≤1000)",
                                                 actual=max_connections)
@@ -154,7 +154,7 @@ class ConnectionLoginChecker(BaseChecker):
 
         # Check for insecure configurations
         if '*' in addresses or '0.0.0.0' in addresses:
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             f"Database listening on all addresses: {listen_addresses}",
                                             expected="Specific IP addresses",
                                             actual=listen_addresses)
@@ -226,7 +226,7 @@ class ConnectionLoginChecker(BaseChecker):
                                             expected="scram-sha-256",
                                             actual=password_encryption)
         elif password_encryption == 'md5':
-            return self._create_warn_result(control,
+            return self._create_fail_result(control,
                                             "Password encryption using MD5 - consider upgrading to SCRAM-SHA-256",
                                             expected="scram-sha-256",
                                             actual=password_encryption)

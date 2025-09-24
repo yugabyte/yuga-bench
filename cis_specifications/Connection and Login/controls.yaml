@@ -58,3 +58,61 @@ controls:
       -
     cis_controls:
       -
+
+  - id: "6.2"
+    title: "Ensure login via 'host' TCP/IP Socket is configured correctly"
+    profile_applicability:
+      - "Level 1 - Yugabyte"
+    description: |
+      A large number of authentication METHODs are available for hosts connecting using
+      TCP/IP sockets, including:
+      • trust
+      • reject
+      • md5
+      • scram-sha-256
+      • password
+      • gss
+      • sspi
+      • ident
+      • pam
+      • ldap
+      • radius
+      • cert
+      METHODs trust, password, and ident are not to be used for remote logins.
+      METHOD md5 is the most popular and can be used in both encrypted and unencrypted
+      sessions, however, it is vulnerable to packet replay attacks. It is recommended that
+      scram- sha-256 be used instead of md5.
+      Use of the gss, sspi, pam, ldap, radius, and cert METHODs are dependent upon the
+      availability of external authenticating processes/services and thus are not covered in
+      this benchmark.
+    rationale: |
+      
+    audit: |
+      
+    remediation: |
+      
+    impact: |
+      
+    default_value: |
+      The availability of the different password-based authentication methods depends on
+      how a user's password on the server is encrypted (or hashed, more accurately). This is
+      controlled by the configuration parameter password_encryption at the time the
+      password is set.
+      If a password was encrypted using the scram-sha-256 setting, then it can be used for
+      the authentication methods scram-sha-256, md5, and password (but password
+      transmission will be in plain text in the latter case).
+      If a password was encrypted using the md5 setting, then it can be used only for the md5
+      and password authentication method specifications (again, with the password
+      transmitted in plain text in the latter case).
+      To check the currently stored password hashes, see the system catalog pg_authid.
+      To upgrade an existing installation from md5 to scram-sha-256, after having ensured that
+      all client libraries in use are new enough to support SCRAM, set password_encryption
+      = 'scram-sha-256' in ysql_pg.conf, reload the postmaster, make all users set new
+      passwords, and change the authentication method specifications in ysql_hba.conf to
+      scram-sha-256.
+    type: "Manual"
+    references:
+      - 
+      - 
+    cis_controls:
+      - 
