@@ -42,7 +42,13 @@ controls:
       This shows that the user2 user is configured properly for sudo access by being a
       member of the dba group.
     remediation: |
-
+      As superuser root, execute the following commands:
+      # echo '%dba ALL= /bin/su - yugabyte' > /etc/sudoers.d/yugabyte
+      # chmod 600 /etc/sudoers.d/yugabyte
+      This grants any Operating System user that is a member of the dba group to use sudo
+      su - yugabyte to become the yugabyte user.
+      Ensure that all Operating System user's that need such access are members of the
+      group.
     impact: |
 
     default_value:
@@ -78,7 +84,25 @@ controls:
     audit: |
       
     remediation: |
-      
+      If any regular or application users have been granted excessive administrative rights,
+      those privileges should be removed immediately via the Yugabyte ALTER ROLE YSQL
+      command. Using the same example above, the following YSQL statements revoke all
+      unnecessary elevated administrative privileges from the regular user appuser:
+      # whoami
+      yugabyte
+      # ysqlsh -c "ALTER ROLE appuser NOSUPERUSER;" ALTER ROLE
+      # ysqlsh -c "ALTER ROLE appuser NOCREATEROLE;" ALTER ROLE
+      # ysqlsh -c "ALTER ROLE appuser NOCREATEDB;" ALTER ROLE
+      # ysqlsh -c "ALTER ROLE appuser NOREPLICATION;" ALTER ROLE
+      # ysqlsh -c "ALTER ROLE appuser NOBYPASSRLS;" ALTER ROLE
+      # ysqlsh -c "ALTER ROLE appuser NOINHERIT;" ALTER ROLE
+      Verify the appuser now passes your check by having no defined Attributes:
+      # whoami
+      yugabyte
+      # ysqlsh -c "\du appuser"
+      List of roles
+      Role name | Attributes | Member of
+      + + appuser | | {}
     impact: |
       
     default_value: N/A
@@ -119,7 +143,30 @@ controls:
       If elevation privileges are utilized which are not required or are expressly forbidden by
       organizational guidance, this is a fail.
     remediation: |
-      
+      Where possible, revoke SECURITY DEFINER on YugabyteDB functions. To change a
+      SECURITY DEFINER function to SECURITY INVOKER, run the following YSQL:
+      # whoami root
+      # sudo su - yugabyte
+      # ysqlsh -c "ALTER FUNCTION [functionname] SECURITY INVOKER;"
+      If it is not possible to revoke SECURITY DEFINER, ensure the function can be executed by
+      only the accounts that absolutely need such functionality:
+      yugabyte=# SELECT proname, proacl FROM pg_proc WHERE proname =
+      'delete_customer';
+      proname | proacl
+      + delete_customer |
+      {=X/postgres,postgres=X/postgres,appwriter=X/postgres}
+      (1 row)
+      yugabyte=# REVOKE EXECUTE ON FUNCTION delete_customer(integer,boolean) FROM
+      appreader;
+      REVOKE
+      yugabyte=# SELECT proname, proacl FROM pg_proc WHERE proname =
+      'delete_customer';
+      proname | proacl
+      + delete_customer | {=X/postgres,postgres=X/postgres}
+      (1 row)
+      Based on the output above, appreader=X/postgres no longer exists in the proacl
+      column results returned from the query and confirms appreader is no longer granted
+      execute privilege on the function.
     impact: |
       
     default_value: N/A
@@ -144,7 +191,13 @@ controls:
     audit: |
       
     remediation: |
-      
+      If a given database user has been granted excessive DML privileges for a given
+      database table, those privileges should be revoked immediately using the REVOKE
+      YSQL command.
+      Continuing with the example above, remove unauthorized grants for appreader user
+      using the REVOKE statement and verify the Boolean values are now false.
+      yugabyte=# REVOKE INSERT, UPDATE, DELETE ON TABLE customer FROM appreader;
+      REVOKE
     impact: |
       
     default_value: The table owner/creator has full privileges; all other users must be explicitly granted access.
@@ -180,7 +233,57 @@ controls:
     audit: |
       
     remediation: |
-      
+      In this example, we are using the using the example passwd table. We will create three
+      database roles to illustrate the workings of RLS:
+      yugabyte=# CREATE ROLE admin; CREATE ROLE
+      yugabyte=# CREATE ROLE bob; CREATE ROLE
+      yugabyte=# CREATE ROLE alice; CREATE ROLE
+      Now, we will insert known data into the passwd table:
+      yugabyte=# INSERT INTO passwd VALUES
+      ('admin','xxx',0,0,'Admin','111-222-3333',null,'/root','/bin/dash');
+      INSERT 0 1
+      yugabyte=# INSERT INTO passwd VALUES
+      ('bob','xxx',1,1,'Bob','123-456-7890',null,'/home/bob','/bin/zsh');
+      INSERT 0 1
+      yugabyte=# INSERT INTO passwd VALUES
+      ('alice','xxx',2,1,'Alice','098-765-4321',null,'/home/alice','/bin/zsh');
+      INSERT 0 1
+      And we will enable RLS on the table:
+      yugabyte=# ALTER TABLE passwd ENABLE ROW LEVEL SECURITY; ALTER TABLE
+      Now that RLS is enabled, we need to define one or more policies. Create the
+      administrator policy and allow it access to all rows:
+      yugabyte=# CREATE POLICY admin_all ON passwd TO admin USING (true) WITH CHECK
+      (true);
+      CREATE POLICY
+      Create a policy for normal users to view all rows:
+      yugabyte=# CREATE POLICY all_view ON passwd FOR SELECT USING (true); CREATE
+      POLICY
+      Create a policy for normal users that allows them to update only their own rows and to
+      limit what values can be set for their login shell:
+      yugabyte=# CREATE POLICY user_mod ON passwd FOR UPDATE USING (current_user =
+      user_name)
+      WITH CHECK (
+      current_user = user_name AND
+      shell IN ('/bin/bash','/bin/sh','/bin/dash','/bin/zsh','/bin/tcsh')
+      );
+      CREATE POLICY
+      Grant all the normal rights on the table to the admin user:
+      yugabyte=# GRANT SELECT, INSERT, UPDATE, DELETE ON passwd TO admin; GRANT
+      Page 104
+      Grant only select access on non-sensitive columns to everyone:
+      yugabyte=# GRANT SELECT
+      (user_name, uid, gid, real_name, home_phone, extra_info, home_dir, shell) ON
+      passwd TO public;
+      GRANT
+      Grant update to only the sensitive columns:
+      yugabyte=# GRANT UPDATE
+      (pwhash, real_name, home_phone, extra_info, shell) ON passwd TO public;
+      GRANT
+      Ensure that no one has been granted Bypass RLS inadvertently, by running the psql
+      display command \du+. If unauthorized users do have Bypass RLS granted then resolve
+      this using the ALTER ROLE <user> NOBYPASSRLS; command.
+      You can now verify that 'admin', 'bob', and 'alice' are properly restricted by querying the
+      passwd table as each of these roles.
     impact: |
       
     default_value: N/A

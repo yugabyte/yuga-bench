@@ -14,7 +14,7 @@ controls:
       The YugabyteSQL configuration file ysql_pg.conf is where all adjustable parameters  can be set. A configuration file is created as part of the data cluster's creation i.e. initdb.  The configuration file enumerates all tunable parameters and even though most of them  are commented out it is understood that they are in fact active and at those very same  documented values. The reason that they are commented out is to signify their default  values. Uncommenting them will force the server to read these values instead of using  the default values.
     rationale:
     audit:
-    remediation:
+    remediation: Not defined yet
     default_value:
     type: "Manual"
     references:
@@ -286,7 +286,7 @@ controls:
     impact: |
 
     default_value: LOCAL0
-    type: "Manual"
+    type: "Automated"
     references:
       -
       -
@@ -324,7 +324,7 @@ controls:
       timestamp associated with these suppressed messages are lost, potentially damaging
       the recreation of an incident timeline.
     default_value: on
-    type: "Manual"
+    type: "Automated"
     references:
       -
       -
@@ -366,7 +366,7 @@ controls:
       Depending on the Syslog server in use, log messages exceeding 1024 bytes may be
       lost or, potentially, cause the Syslog server processes to abort.
     default_value: on
-    type: "Manual"
+    type: "Automated"
     references:
       -
       -

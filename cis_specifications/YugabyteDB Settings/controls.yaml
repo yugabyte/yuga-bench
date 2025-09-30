@@ -20,7 +20,10 @@ controls:
       Review all configuration settings. Configure YugabyteDB logging to record all
       modifications and changes to the RDBMS.
     remediation: |
-
+      In the case of a changed parameter, the value is returned back to its default value. In
+      the case of a successful exploit of an already set runtime parameter then an analysis
+      must be carried out to determine the best approach in mitigating the risk to prevent
+      future exploitation.
     impact: |
 
     default_value: N/A
@@ -64,7 +67,18 @@ controls:
       Therefore, a successful exploit may not be detected until after a server restart, e.g.,
       during a maintenance window.
     remediation: |
-      
+      Once detected, the unauthorized/undesired change can be corrected by altering the
+      configuration file and executing a server restart. In the case where the parameter has
+      been specified on the command-line invocation of yb_ctl the restart invocation is
+      insufficient and an explicit stop and start must instead be made.
+      1. Query the view pg_settings and compare with previous query outputs for any
+      changes.
+      2. Review configuration files ysql_pg.conf and ysql_hba.conf and compare them
+      with previously archived file copies for any changes.
+      3. Examine the process output and look for parameters that were used at server
+      startup:
+      ps -few | grep -E '[p]ost' | grep -- '-[D]'
+      1. Examine the contents of $PGDATA/postmaster.opts
     impact: |
       
     default_value: N/A
@@ -92,7 +106,19 @@ controls:
       Therefore, all exploits require the successful compromise of either that UNIX account or
       the postgres superuser account itself.
     remediation: |
-      
+      Once detected, the unauthorized/undesired change can be corrected by editing the
+      altered configuration file and executing a server restart. In the case where the
+      parameter has been specified on the command-line invocation of pg_ctl the restart
+      invocation is insufficient and an explicit stop and start must instead be made.
+      Detecting a change is possible by one of the following methods:
+      1. Query the view pg_settings and compare with previous query outputs for any
+      changes
+      2. Review the configuration files ysql_pg.conf and ysql_hba.conf and compare
+      with previously archived file copies for any changes
+      3. Examine the process output and look for parameters that were used at server
+      startup:
+      ps -few | grep -E 'postgres' | grep -- '-[D]'
+      1. Examine the contents of $PGDATA/postmaster.opts
     impact: |
       
     default_value: N/A
@@ -118,7 +144,7 @@ controls:
       owner of the postmaster server process and cluster (typically UNIX user account
       yugabyte).
     remediation: |
-      
+      Restore all values in the YugabyteDB configuration files and invoke the server to restart.
     impact: |
       
     default_value: N/A
@@ -146,7 +172,20 @@ controls:
       Therefore, all exploits require the successful compromise of either that UNIX account or
       the yugabyte superuser account itself.
     remediation: |
-      
+      The exploit is made in the configuration files. These changes are effected upon server
+      restart. Once detected, the unauthorized/undesired change can be made by editing the
+      altered configuration file and executing a server restart. In the case where the
+      parameter has been set on the command-line invocation of pg_ctl the restart invocation
+      is insufficient and an explicit stop and start must instead be made.
+      Detecting a change is possible by one of the following methods:
+      1. Query the view pg_settings and compare with previous query outputs for any
+      changes.
+      2. Review the configuration files ysql_pg.conf and ysql_hba.conf and compare
+      with previously archived file copies for any changes.
+      3. Examine the process output and look for parameters that were used at server
+      startup:
+      ps aux | grep -E 'post' | grep -- '-[D]'
+      1. Examine the contents of $PGDATA/postmaster.opts
     impact: |
       
     default_value: N/A
@@ -172,7 +211,9 @@ controls:
       they have been compromised is to inspect all catalogs and list attributes for database
       entities such as ROLEs and databases.
     remediation: |
-      
+      In the matter of a user session, the login sessions must be validated that it is not
+      executing undesired parameter changes. In the matter of attributes that have been
+      changed in entities, they must be manually reverted to their default value(s).
     impact: |
       
     default_value: N/A
@@ -200,7 +241,21 @@ controls:
       To determine whether TLS is enabled, simply query the parameter value while logged
       into the database.
     remediation: |
-      
+      Before you can enable and use server-to-server encryption, you need to create and
+      configure server certificates for each node of your YugabyteDB cluster. For information,
+      see: https://docs.yugabyte.com/preview/secure/tls-encryption/server-certificates/
+      To enable server-to-server encryption using TLS, start your YB-Master and YB-TServer
+      nodes using the following flags.
+      • --use_node_to_node_encryption Set to true to enable encryption between
+      YugabyteDB nodes. Default value is false.
+      • --allow_insecure_connections Set to false to disallow any service with
+      unencrypted communication from joining this cluster. Default value is true. Note
+      that this flag requires --use_node_to_node_encryption to be enabled.
+      • --certs_for_client_dir Optional. Directory containing the certificates created
+      for this node to perform encrypted communication with the other nodes. Default
+      for YB-Masters is <data drive>/yb-data/master/data/certs and for YBTServers is <data drive>/yb-data/tserver/data/certs
+      You can enable access control by starting the yb-master services with the --
+      use_node_to_node_encryption=true flag as described above
     impact: |
       
     default_value: |
@@ -247,7 +302,32 @@ controls:
       off
       (1 row)
     remediation: |
-      
+      To enable client-to-server encryption for YSQL and YCQL, start your YB-TServer
+      services with the required flags described below. Your YB-Master services do not
+      require additional configuration.
+      • --use_client_to_server_encryption Set to true to enable encryption between
+      the various YugabyteDB clients and the database cluster. Default value is false.
+      • --allow_insecure_connections Set to false to disallow any client with
+      unencrypted communication from joining this cluster. Default value is true. Note
+      that this flag requires --use_client_to_server_encryption to be enabled.
+      • --certs_for_client_dir Optional. Defaults to the same directory as the serverto-server encryption. 
+      This directory should contain the configuration for the client
+      to perform TLS communication with the cluster. Default value for YB-TServer is
+      <data drive>/yb-data/tserver/data/certs.
+      To enable access control, follow these steps, start the yb-tserver services with the
+      following flag (described above):
+      --use_client_to_server_encryption=true
+      This flag enables both encrypted and unencrypted clients to connect to the cluster.
+      To prevent clients without the appropriate encryption from connecting, you must add the
+      following flag:
+      --allow_insecure_connections=false
+      Your command should look similar to this:
+      ./bin/yb-tserver \
+      --fs_data_dirs=<data directories> \
+      --tserver_master_addrs=<master addresses> \
+      --certs_for_client_dir /home/centos/tls/$NODE_IP \
+      --allow_insecure_connections=false \
+      --use_client_to_server_encryption=true &
     impact: |
       
     default_value: |
@@ -295,12 +375,21 @@ controls:
       demonstrate the use of disk-level encryption. If this is required and is not found, this is a
       fail. If controls do not exist or are not enabled, this is also a fail.
     remediation: |
-      
+      The pgcrypto extension is included with the YugabyteDB 'contrib' package. Although
+      included, it needs to be created in the database.
+      As the database administrator, run the following:
+      yugabyte=# CREATE EXTENSION pgcrypto;
+      Verify pgcrypto is installed:
+      yugabyte=# SELECT * FROM pg_available_extensions WHERE name='pgcrypto';
+      name | default_version | installed_version | comment
+      ----------+-----------------+-------------------+-------------------------
+      pgcrypto | 1.3 | 1.3 | cryptographic functions
+      (1 row)
     impact: |
       
     default_value: |
       pgcrypto is pre-bundled with standard YugabyteDB distribution but requires installation.
-    type: "Manual"
+    type: "Automated"
     references:
       - 
       - 
