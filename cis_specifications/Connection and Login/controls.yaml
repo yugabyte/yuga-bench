@@ -48,7 +48,28 @@ controls:
       # ./bin/ysqlsh -U user2 -d yugabyte
       yugabyte=#
     remediation: |
-
+      Creation of a database account that matches the local account allows PEER
+      authentication:
+      # ./bin/ysqlsh -c "CREATE ROLE user1 WITH LOGIN;" CREATE ROLE
+      Execute the following as the UNIX user account, the default authentication rules should
+      now permit the login:
+      # su - user1
+      # whoami user1
+      # ./bin/ysqlsh -d yugabyte
+      yugabyte=#
+      As per the host-based authentication rules in $PGDATA/pg_hba.conf, all login attempts
+      via UNIX DOMAIN SOCKETS are processed on the line beginning with local.
+      Once edited, the server process must reload the authentication file before it can take
+      effect. Improperly configured rules cannot update i.e. the old rules remain in place. The
+      YugabyteDB logs will report the outcome of the SIGHUP:
+      yugabyte=# select pg_reload_conf();
+      pg_reload_conf
+      ----------------
+      t
+      (1 row)
+      Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+      following GFLAG to YB-TServer:
+      ./bin/yb-tserver --ysql_hba_conf_csv
     impact: |
 
     default_value:
@@ -90,7 +111,27 @@ controls:
     audit: |
       
     remediation: |
-      
+      Confirm a login attempt has been made by looking for a logged error message detailing
+      the nature of the authenticating failure. In the case of failed login attempts, whether
+      encrypted or unencrypted, check the following:
+      • The server should be sitting on a port exposed to the remote connecting host i.e.
+      NOT ip address 127.0.0.1
+      listen_addresses = '*'
+      • An authenticating rule must exist in the file ysql_hba.conf
+      This example permits only encrypted sessions for the yugabyte role and denies all
+      unencrypted sessions for the yugabyte role:
+      # TYPE DATABASE
+      USER
+      ADDRESS
+      METHOD
+      hostssl all
+      yugabyte
+      0.0.0.0/0
+      scram-sha-256
+      hostnossl all
+      yugabyte
+      0.0.0.0/0
+      reject
     impact: |
       
     default_value: |
