@@ -36,10 +36,36 @@ class LoggingMonitoringChecker(BaseChecker):
                 return self._check_syslog_messages_not_suppressed(control)
             elif control_id == "3.1.10":
                 return self._check_log_messages_not_lost_due_to_size(control)
+            elif control_id == "3.1.11":
+                return self._check_program_name_syslog_message(control)
+            elif control_id == "3.1.12":
+                return self._check_correct_message_server_log(control)
+            elif control_id == "3.1.13":
+                return self._check_ysql_statement_error_recorded(control)
+            elif control_id == "3.1.14":
+                return self._check_debug_print_parse_disabled(control)
+            elif control_id == "3.1.15":
+                return self._check_debug_print_rewritten_disabled(control)
+            elif control_id == "3.1.16":
+                return self._check_debug_print_plan_disabled(control)
+            elif control_id == "3.1.17":
+                return self._check_debug_pretty_print_enabled(control)
+            elif control_id == "3.1.18":
+                return self._check_log_connections_enabled(control)
+            elif control_id == "3.1.19":
+                return self._check_log_disconnections_enabled(control)
+            elif control_id == "3.1.20":
+                return self._check_log_error_verbosity(control)
+            elif control_id == "3.1.21":
+                return self._check_log_hostname(control)
+            elif control_id == "3.1.22":
+                return self._check_log_line_prefix(control)
+            elif control_id == "3.1.23":
+                return self._check_log_statement(control)
+            elif control_id == "3.1.24":
+                return self._check_log_timezone(control)
             elif control_id.startswith("3.2"):
-                return self._check_statement_logging(control)
-            elif control_id.startswith("3.3"):
-                return self._check_connection_logging(control)
+                return self._check_audit_extension_enabled(control)
             else:
                 return self._check_generic_logging_setting(control)
         except Exception as e:
@@ -76,8 +102,47 @@ class LoggingMonitoringChecker(BaseChecker):
                                             actual=current_value)
 
     def _check_log_file_permissions(self, control: CISControl) -> ControlResult:
-        """Check log file permissions"""
-        return self._create_skip_result(control, "Log file permissions check requires manual OS-level verification")
+        """Check log file permissions using log_file_mode setting"""
+        try:
+            log_file_mode = self.db.get_setting('log_file_mode')
+
+            if not log_file_mode:
+                return self._create_fail_result(control, 
+                                              "Could not retrieve log_file_mode setting",
+                                              expected="0600",
+                                              actual="NULL")
+
+            # Expected secure permission is 0600 (owner read/write only)
+            expected_mode = "0600"
+
+            if log_file_mode == expected_mode:
+                return self._create_pass_result(control, 
+                                              f"Log file permissions are correctly set: {log_file_mode}",
+                                              expected=expected_mode,
+                                              actual=log_file_mode)
+            else:
+                # Check if it's a more restrictive setting (0400 - read only)
+                if log_file_mode == "0400":
+                    return self._create_pass_result(control, 
+                                                  f"Log file permissions are restrictive (read-only): {log_file_mode}",
+                                                  expected=expected_mode,
+                                                  actual=log_file_mode)
+
+                # Check for potentially insecure permissions
+                insecure_modes = ["0644", "0666", "0755", "0777"]
+                if log_file_mode in insecure_modes:
+                    return self._create_fail_result(control, 
+                                                  f"Log file permissions are too permissive: {log_file_mode}",
+                                                  expected=expected_mode,
+                                                  actual=log_file_mode)
+                else:
+                    return self._create_warn_result(control, 
+                                                  f"Log file permissions set to non-standard value: {log_file_mode}",
+                                                  expected=expected_mode,
+                                                  actual=log_file_mode)
+                                                  
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log file permissions: {str(e)}")
 
     def _check_log_truncate_on_rotation(self, control: CISControl) -> ControlResult:
         """Check log truncate on rotation setting"""
@@ -143,42 +208,52 @@ class LoggingMonitoringChecker(BaseChecker):
         return self._check_setting_value(control, ['local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7'], 'syslog_facility')
 
     def _check_syslog_messages_not_suppressed(self, control: CISControl) -> ControlResult:
-        """Check that syslog messages are not suppressed"""
-        silent_mode = self.db.get_setting('silent_mode')
+        """Check that syslog sequence numbers are enabled to prevent message suppression"""
+        try:
+            syslog_sequence_numbers = self.db.get_setting('syslog_sequence_numbers')
 
-        if silent_mode == 'on':
-            return self._create_fail_result(control,
-                                            "Silent mode is enabled, syslog messages may be suppressed",
-                                            expected="silent_mode = off",
-                                            actual="silent_mode = on")
-        else:
-            return self._create_pass_result(control,
-                                            "Silent mode is disabled, syslog messages not suppressed",
-                                            expected="silent_mode = off",
-                                            actual=f"silent_mode = {silent_mode}")
+            if not syslog_sequence_numbers:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve syslog_sequence_numbers setting",
+                                            expected="on",
+                                            actual="NULL")
+
+            if syslog_sequence_numbers.lower() == 'on':
+                return self._create_pass_result(control, 
+                                            "Syslog sequence numbers are enabled - messages will not be suppressed",
+                                            expected="on",
+                                            actual=syslog_sequence_numbers)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Syslog sequence numbers are disabled - messages may be suppressed: {syslog_sequence_numbers}",
+                                            expected="on",
+                                            actual=syslog_sequence_numbers)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking syslog_sequence_numbers: {str(e)}")
 
     def _check_log_messages_not_lost_due_to_size(self, control: CISControl) -> ControlResult:
-        """Check that log messages are not lost due to size constraints"""
-        # Check if log rotation is properly configured
-        rotation_age = self.db.get_setting('log_rotation_age')
-        rotation_size = self.db.get_setting('log_rotation_size')
+        """Check that long log messages are split when logging to syslog to prevent message loss"""
+        try:
+            syslog_split_messages = self.db.get_setting('syslog_split_messages')
 
-        issues = []
-        if not rotation_age or rotation_age == '0':
-            issues.append("log_rotation_age is not configured")
-        if not rotation_size or rotation_size == '0':
-            issues.append("log_rotation_size is not configured")
+            if not syslog_split_messages:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve syslog_split_messages setting",
+                                            expected="on",
+                                            actual="NULL")
 
-        if issues:
-            return self._create_fail_result(control,
-                                            f"Log rotation may not prevent message loss: {', '.join(issues)}",
-                                            expected="Both rotation age and size configured",
-                                            actual=f"age={rotation_age}, size={rotation_size}")
-        else:
-            return self._create_pass_result(control,
-                                            f"Log rotation configured to prevent message loss: age={rotation_age}, size={rotation_size}",
-                                            expected="Both rotation age and size configured",
-                                            actual=f"age={rotation_age}, size={rotation_size}")
+            if syslog_split_messages.lower() == 'on':
+                return self._create_pass_result(control, 
+                                            "Syslog message splitting is enabled - long messages will not be lost",
+                                            expected="on",
+                                            actual=syslog_split_messages)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Syslog message splitting is disabled - long messages may be truncated: {syslog_split_messages}",
+                                            expected="on",
+                                            actual=syslog_split_messages)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking syslog_split_messages: {str(e)}")
 
     def _check_statement_logging(self, control: CISControl) -> ControlResult:
         """Check statement logging configuration"""
@@ -215,25 +290,49 @@ class LoggingMonitoringChecker(BaseChecker):
             return self._check_generic_logging_setting(control)
 
     def _check_log_line_prefix(self, control: CISControl) -> ControlResult:
-        """Check log line prefix configuration"""
-        setting_value = self.db.get_setting('log_line_prefix')
-        required_components = ['%t', '%u', '%d', '%p']
+        """Check log_line_prefix configuration includes required components"""
+        try:
+            log_line_prefix = self.db.get_setting('log_line_prefix')
 
-        if not setting_value:
-            return self._create_fail_result(control, "log_line_prefix is not configured")
+            if not log_line_prefix:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_line_prefix setting",
+                                            expected="%m [%p]: [%l-1] db=%d,user=%u,app=%a,client=%h",
+                                            actual="NULL")
 
-        missing_components = [comp for comp in required_components if comp not in setting_value]
+            # Define minimum required components
+            required_components = {
+                '%m': 'timestamp with milliseconds',
+                '%p': 'process ID',
+                '%l': 'session line number',
+                '%d': 'database name',
+                '%u': 'user name',
+                '%a': 'application name',
+                '%h': 'remote host'
+            }
 
-        if not missing_components:
-            return self._create_pass_result(control,
-                                            f"log_line_prefix includes all required components: {setting_value}",
-                                            expected="Include %t, %u, %d, %p",
-                                            actual=setting_value)
-        else:
-            return self._create_fail_result(control,
-                                            f"log_line_prefix missing components {missing_components}: {setting_value}",
-                                            expected="Include %t, %u, %d, %p",
-                                            actual=setting_value)
+            # Check which required components are present
+            missing_components = []
+            present_components = []
+
+            for component, description in required_components.items():
+                if component in log_line_prefix:
+                    present_components.append(f"{component} ({description})")
+                else:
+                    missing_components.append(f"{component} ({description})")
+
+            if missing_components:
+                return self._create_fail_result(control, 
+                                            f"log_line_prefix missing required components: {', '.join(missing_components)}",
+                                            expected="%m [%p]: [%l-1] db=%d,user=%u,app=%a,client=%h (minimum)",
+                                            actual=log_line_prefix)
+            else:
+                return self._create_pass_result(control, 
+                                            f"log_line_prefix includes all required components: {', '.join(present_components)}",
+                                            expected="Includes %m, %p, %l, %d, %u, %a, %h",
+                                            actual=log_line_prefix)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_line_prefix: {str(e)}")
 
     def _check_generic_logging_setting(self, control: CISControl) -> ControlResult:
         """Generic logging setting check"""
@@ -247,3 +346,393 @@ class LoggingMonitoringChecker(BaseChecker):
                                             actual=str(setting_value))
         else:
             return self._create_skip_result(control, "Generic logging check - manual verification required")
+
+    def _check_program_name_syslog_message(self, control: CISControl) -> ControlResult:
+        """Check syslog program name/identifier setting"""
+        try:
+            syslog_ident = self.db.get_setting('syslog_ident')
+
+            if not syslog_ident:
+                return self._create_fail_result(control, 
+                                              "Could not retrieve syslog_ident setting",
+                                              expected="Descriptive identifier (e.g., yugabyte, postgres)",
+                                              actual="NULL")
+
+            acceptable_identifiers = ['yugabyte', 'postgres', 'postgresql', 'ybdb']
+
+            if syslog_ident.lower() in [ident.lower() for ident in acceptable_identifiers]:
+                return self._create_pass_result(control, 
+                                              f"Syslog identifier is properly set: {syslog_ident}",
+                                              expected="Descriptive database identifier",
+                                              actual=syslog_ident)
+
+            problematic_identifiers = ['', 'app', 'service', 'daemon', 'server', 'db', 'test']
+
+            if syslog_ident.lower() in problematic_identifiers:
+                return self._create_fail_result(control, 
+                                              f"Syslog identifier is too generic or unclear: {syslog_ident}",
+                                              expected="Descriptive database identifier",
+                                              actual=syslog_ident)
+
+            sensitive_patterns = ['prod', 'dev', 'test', 'staging', 'v1', 'v2', 'server', 'host']
+            has_sensitive = any(pattern in syslog_ident.lower() for pattern in sensitive_patterns)
+
+            if has_sensitive:
+                return self._create_warn_result(control, 
+                                              f"Syslog identifier may contain environment/version info: {syslog_ident}",
+                                              expected="Generic database identifier without environment details",
+                                              actual=syslog_ident)
+
+            if len(syslog_ident) >= 3 and syslog_ident.replace('-', '').replace('_', '').isalnum():
+                return self._create_pass_result(control, 
+                                              f"Custom syslog identifier appears appropriate: {syslog_ident}",
+                                              expected="Descriptive database identifier",
+                                              actual=syslog_ident)
+
+            return self._create_warn_result(control, 
+                                          f"Syslog identifier format should be reviewed: {syslog_ident}",
+                                          expected="Alphanumeric identifier (3+ characters)",
+                                          actual=syslog_ident)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking syslog identifier: {str(e)}")
+
+    def _check_correct_message_server_log(self, control: CISControl) -> ControlResult:
+        """Check log_min_messages setting"""
+        try:
+            log_min_messages = self.db.get_setting('log_min_messages')
+
+            if not log_min_messages:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_min_messages setting",
+                                            expected="warning",
+                                            actual="NULL")
+
+            if log_min_messages.lower() == 'warning':
+                return self._create_pass_result(control, 
+                                            f"Log minimum messages correctly set: {log_min_messages}",
+                                            expected="warning",
+                                            actual=log_min_messages)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Log minimum messages not set to recommended level: {log_min_messages}",
+                                            expected="warning",
+                                            actual=log_min_messages)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_min_messages: {str(e)}")
+
+    def _check_ysql_statement_error_recorded(self, control: CISControl) -> ControlResult:
+        """Check log_min_error_statement setting"""
+        try:
+            log_min_error_statement = self.db.get_setting('log_min_error_statement')
+
+            if not log_min_error_statement:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_min_error_statement setting",
+                                            expected="error",
+                                            actual="NULL")
+
+            acceptable_levels = ['error', 'fatal', 'panic']
+
+            if log_min_error_statement.lower() in acceptable_levels:
+                return self._create_pass_result(control, 
+                                            f"Error statement logging properly configured: {log_min_error_statement}",
+                                            expected="error or higher",
+                                            actual=log_min_error_statement)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Error statement logging not configured to at least ERROR: {log_min_error_statement}",
+                                            expected="error",
+                                            actual=log_min_error_statement)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_min_error_statement: {str(e)}")
+
+    def _check_debug_print_parse_disabled(self, control: CISControl) -> ControlResult:
+        """Check debug_print_parse setting is disabled"""
+        try:
+            debug_print_parse = self.db.get_setting('debug_print_parse')
+
+            if not debug_print_parse:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve debug_print_parse setting",
+                                            expected="off",
+                                            actual="NULL")
+
+            if debug_print_parse.lower() == 'off':
+                return self._create_pass_result(control, 
+                                            "Debug print parse correctly disabled",
+                                            expected="off",
+                                            actual=debug_print_parse)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Debug print parse is enabled - security risk: {debug_print_parse}",
+                                            expected="off",
+                                            actual=debug_print_parse)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking debug_print_parse: {str(e)}")
+
+    def _check_debug_print_rewritten_disabled(self, control: CISControl) -> ControlResult:
+        """Check debug_print_rewritten setting is disabled"""
+        try:
+            debug_print_rewritten = self.db.get_setting('debug_print_rewritten')
+
+            if not debug_print_rewritten:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve debug_print_rewritten setting",
+                                            expected="off",
+                                            actual="NULL")
+
+            if debug_print_rewritten.lower() == 'off':
+                return self._create_pass_result(control, 
+                                            "Debug print rewritten correctly disabled",
+                                            expected="off",
+                                            actual=debug_print_rewritten)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Debug print rewritten is enabled - security risk: {debug_print_rewritten}",
+                                            expected="off",
+                                            actual=debug_print_rewritten)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking debug_print_rewritten: {str(e)}")
+
+    def _check_debug_print_plan_disabled(self, control: CISControl) -> ControlResult:
+        """Check debug_print_plan setting is disabled"""
+        try:
+            debug_print_plan = self.db.get_setting('debug_print_plan')
+
+            if not debug_print_plan:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve debug_print_plan setting",
+                                            expected="off",
+                                            actual="NULL")
+
+            if debug_print_plan.lower() == 'off':
+                return self._create_pass_result(control, 
+                                            "Debug print plan correctly disabled",
+                                            expected="off",
+                                            actual=debug_print_plan)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Debug print plan is enabled - security risk: {debug_print_plan}",
+                                            expected="off",
+                                            actual=debug_print_plan)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking debug_print_plan: {str(e)}")
+
+    def _check_debug_pretty_print_enabled(self, control: CISControl) -> ControlResult:
+        """Check debug_pretty_print setting is enabled"""
+        try:
+            debug_pretty_print = self.db.get_setting('debug_pretty_print')
+
+            if not debug_pretty_print:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve debug_pretty_print setting",
+                                            expected="on",
+                                            actual="NULL")
+
+            if debug_pretty_print.lower() == 'on':
+                return self._create_pass_result(control, 
+                                            "Debug pretty print correctly enabled",
+                                            expected="on",
+                                            actual=debug_pretty_print)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Debug pretty print is not enabled: {debug_pretty_print}",
+                                            expected="on",
+                                            actual=debug_pretty_print)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking debug_pretty_print: {str(e)}")
+
+    def _check_log_connections_enabled(self, control: CISControl) -> ControlResult:
+        """Check log_connections setting is enabled"""
+        try:
+            log_connections = self.db.get_setting('log_connections')
+
+            if not log_connections:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_connections setting",
+                                            expected="on",
+                                            actual="NULL")
+
+            if log_connections.lower() == 'on':
+                return self._create_pass_result(control, 
+                                            "Connection logging is properly enabled",
+                                            expected="on",
+                                            actual=log_connections)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Connection logging is not enabled: {log_connections}",
+                                            expected="on",
+                                            actual=log_connections)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_connections: {str(e)}")
+
+    def _check_log_disconnections_enabled(self, control: CISControl) -> ControlResult:
+        """Check log_disconnections setting is enabled"""
+        try:
+            log_disconnections = self.db.get_setting('log_disconnections')
+
+            if not log_disconnections:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_disconnections setting",
+                                            expected="on",
+                                            actual="NULL")
+
+            if log_disconnections.lower() == 'on':
+                return self._create_pass_result(control, 
+                                            "Disconnection logging is properly enabled",
+                                            expected="on",
+                                            actual=log_disconnections)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Disconnection logging is not enabled: {log_disconnections}",
+                                            expected="on",
+                                            actual=log_disconnections)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_disconnections: {str(e)}")
+
+    def _check_log_error_verbosity(self, control: CISControl) -> ControlResult:
+        """Check log_error_verbosity setting"""
+        try:
+            log_error_verbosity = self.db.get_setting('log_error_verbosity')
+
+            if not log_error_verbosity:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_error_verbosity setting",
+                                            expected="verbose",
+                                            actual="NULL")
+
+            verbose_levels = ['terse', 'default', 'verbose']
+            if log_error_verbosity.lower() in verbose_levels:
+                return self._create_pass_result(control, 
+                                            "Log error verbosity correctly set to verbose",
+                                            expected="verbose",
+                                            actual=log_error_verbosity)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Log error verbosity not set to verbose: {log_error_verbosity}",
+                                            expected="verbose",
+                                            actual=log_error_verbosity)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_error_verbosity: {str(e)}")
+
+    def _check_log_hostname(self, control: CISControl) -> ControlResult:
+        """Check log_hostname setting is disabled"""
+        try:
+            log_hostname = self.db.get_setting('log_hostname')
+
+            if not log_hostname:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_hostname setting",
+                                            expected="off",
+                                            actual="NULL")
+
+            if log_hostname.lower() == 'off':
+                return self._create_pass_result(control, 
+                                            "Log hostname correctly disabled",
+                                            expected="off",
+                                            actual=log_hostname)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Log hostname should be disabled: {log_hostname}",
+                                            expected="off",
+                                            actual=log_hostname)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_hostname: {str(e)}")
+
+    def _check_log_statement(self, control: CISControl) -> ControlResult:
+        """Check log_statement setting"""
+        try:
+            log_statement = self.db.get_setting('log_statement')
+
+            if not log_statement:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_statement setting",
+                                            expected="ddl, mod, or all",
+                                            actual="NULL")
+
+            if log_statement.lower() == 'none':
+                return self._create_fail_result(control, 
+                                            "Statement logging is disabled - security risk",
+                                            expected="ddl, mod, or all",
+                                            actual=log_statement)
+            else:
+                acceptable_values = ['ddl', 'mod', 'all']
+                if log_statement.lower() in acceptable_values:
+                    return self._create_pass_result(control, 
+                                                f"Statement logging properly configured: {log_statement}",
+                                                expected="ddl, mod, or all",
+                                                actual=log_statement)
+                else:
+                    return self._create_warn_result(control, 
+                                                f"Statement logging set to non-standard value: {log_statement}",
+                                                expected="ddl, mod, or all",
+                                                actual=log_statement)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_statement: {str(e)}")
+
+    def _check_log_timezone(self, control: CISControl) -> ControlResult:
+        """Check log_timezone setting"""
+        try:
+            log_timezone = self.db.get_setting('log_timezone')
+
+            if not log_timezone:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve log_timezone setting",
+                                            expected="UTC or GMT",
+                                            actual="NULL")
+
+            acceptable_timezones = ['utc', 'gmt', 'universal']
+
+            if log_timezone.lower() in acceptable_timezones:
+                return self._create_pass_result(control, 
+                                            f"Log timezone properly set: {log_timezone}",
+                                            expected="UTC or GMT",
+                                            actual=log_timezone)
+            else:
+                return self._create_fail_result(control, 
+                                            f"Log timezone not set to UTC/GMT: {log_timezone}",
+                                            expected="UTC or GMT",
+                                            actual=log_timezone)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking log_timezone: {str(e)}")
+
+    def _check_audit_extension_enabled(self, control: CISControl) -> ControlResult:
+        """Check pgAudit extension is enabled and configured"""
+        try:
+            shared_preload_libraries = self.db.get_setting('shared_preload_libraries')
+
+            if not shared_preload_libraries:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve shared_preload_libraries setting",
+                                            expected="Contains pgaudit",
+                                            actual="NULL")
+
+            libraries = [lib.strip().lower() for lib in shared_preload_libraries.split(',')]
+
+            if 'pgaudit' not in libraries:
+                return self._create_fail_result(control, 
+                                            f"pgAudit extension not found in shared_preload_libraries: {shared_preload_libraries}",
+                                            expected="pgaudit in shared_preload_libraries",
+                                            actual=shared_preload_libraries)
+
+            pgaudit_log = self.db.get_setting('pgaudit.log')
+
+            if not pgaudit_log:
+                return self._create_warn_result(control, 
+                                            "pgAudit loaded but pgaudit.log setting not accessible",
+                                            expected="Configured audit components",
+                                            actual="pgaudit.log not readable")
+
+            if pgaudit_log.lower() == 'none':
+                return self._create_fail_result(control, 
+                                            "pgAudit is loaded but no audit components are enabled",
+                                            expected="Audit components enabled (READ,WRITE,FUNCTION,ROLE,DDL,MISC)",
+                                            actual=f"pgaudit.log = {pgaudit_log}")
+            else:
+                return self._create_pass_result(control, 
+                                            f"pgAudit properly configured with components: {pgaudit_log}",
+                                            expected="Audit components enabled",
+                                            actual=f"pgaudit.log = {pgaudit_log}")
+
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking audit extension: {str(e)}")
