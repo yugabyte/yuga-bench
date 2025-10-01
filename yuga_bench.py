@@ -65,22 +65,11 @@ class CISBenchmarkRunner:
         logging.info(f"Running {len(filtered_controls)} controls for {self.profile_level}")
 
         results = []
-        passed = failed = warnings = skipped = 0
 
         for control in filtered_controls:
             try:
                 result = self._execute_control_check(control)
                 results.append(result)
-
-                # Update counters
-                if result.status == ControlStatus.PASS:
-                    passed += 1
-                elif result.status == ControlStatus.FAIL:
-                    failed += 1
-                elif result.status == ControlStatus.WARN:
-                    warnings += 1
-                elif result.status == ControlStatus.SKIP:
-                    skipped += 1
 
                 logging.info(f"Control {result.control_id}: {result.status.value} - {result.message[:100]}")
 
@@ -94,21 +83,12 @@ class CISBenchmarkRunner:
                     message=f"Control execution error: {str(e)}",
                     section=control.section
                 ))
-                failed += 1
 
-        # Generate section summaries
-        section_summaries = self._generate_section_summaries(results)
-
+        # Create BenchmarkReport with only the required parameters
         return BenchmarkReport(
             cluster_info=self.db.get_cluster_info(),
             scan_time=datetime.now(),
-            total_checks=len(filtered_controls),
-            passed=passed,
-            failed=failed,
-            warnings=warnings,
-            skipped=skipped,
             results=results,
-            section_summaries=section_summaries,
             profile_level=self.profile_level
         )
 
@@ -148,9 +128,10 @@ class CISBenchmarkRunner:
             return ControlResult(
                 control_id=control.control_id,
                 title=control.title,
-                status=ControlStatus.SKIP,
+                status=ControlStatus.MANUAL,
                 message="Manual control - requires manual verification",
                 section=control.section,
+                remediation=control.remediation,
                 profile_level=control.profile_applicability[0] if control.profile_applicability else "",
                 audit_command=control.audit
             )
@@ -170,6 +151,7 @@ class CISBenchmarkRunner:
                 status=ControlStatus.SKIP,
                 message="Unknown section - manual verification recommended",
                 section=control.section,
+                remediation=control.remediation,
                 profile_level=control.profile_applicability[0] if control.profile_applicability else "",
                 audit_command=control.audit
             )
@@ -212,15 +194,13 @@ class CISBenchmarkRunner:
         for section in section_order:
             if section in section_stats:
                 stats = section_stats[section]
-                pass_percentage = (stats['passed'] / stats['total'] * 100) if stats['total'] > 0 else 0
                 summaries.append(SectionSummary(
                     section_name=section,
                     total_controls=stats['total'],
                     passed=stats['passed'],
                     failed=stats['failed'],
                     warnings=stats['warnings'],
-                    skipped=stats['skipped'],
-                    pass_percentage=pass_percentage
+                    skipped=stats['skipped']
                 ))
 
         return summaries

@@ -6,7 +6,7 @@ from core.models import BenchmarkReport, ControlStatus
 
 
 class HTMLReporter:
-    """Generate HTML format reports"""
+    """Generate HTML format reports with Manual controls support"""
 
     @staticmethod
     def generate_report(report: BenchmarkReport, output_file: str):
@@ -42,7 +42,7 @@ class HTMLReporter:
 
     @staticmethod
     def _get_css_styles() -> str:
-        """Get CSS styles for the HTML report with YugabyteDB branding"""
+        """Get CSS styles for the HTML report with YugabyteDB branding and Manual category"""
         return """
     <style>
         :root {
@@ -58,6 +58,9 @@ class HTMLReporter:
             --success-green: #22C55E;
             --error-red: #EF4444;
             --info-cyan: #06B6D4;
+            --warning-amber: #F59E0B;
+            --manual-purple: #8B5CF6;
+            --manual-light-purple: #A78BFA;
         }
 
         * {
@@ -140,7 +143,7 @@ class HTMLReporter:
 
         .summary-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2.5rem;
         }
@@ -184,6 +187,10 @@ class HTMLReporter:
             border-left-color: var(--yugabyte-dark-gray);
             background: linear-gradient(135deg, rgba(45, 45, 45, 0.05) 0%, white 100%);
         }
+        .summary-card.manual {
+            border-left-color: var(--manual-purple);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, white 100%);
+        }
 
         .summary-card h3 {
             font-size: 3rem;
@@ -203,6 +210,10 @@ class HTMLReporter:
         .summary-card.skipped h3 {
             color: var(--yugabyte-dark-gray);
             text-shadow: 0 2px 4px rgba(45, 45, 45, 0.2);
+        }
+        .summary-card.manual h3 {
+            color: var(--manual-purple);
+            text-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
         }
 
         .summary-card p {
@@ -260,6 +271,12 @@ class HTMLReporter:
             box-shadow: 0 2px 4px rgba(255, 105, 0, 0.1);
         }
 
+        .section-stat.manual {
+            border-color: var(--manual-purple);
+            color: var(--manual-purple);
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.1);
+        }
+
         .progress-bar {
             width: 100%;
             height: 10px;
@@ -315,6 +332,10 @@ class HTMLReporter:
         .control.info {
             border-left: 5px solid var(--info-cyan);
             box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.1);
+        }
+        .control.manual {
+            border-left: 5px solid var(--manual-purple);
+            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.1);
         }
 
         .control-header {
@@ -376,6 +397,18 @@ class HTMLReporter:
             box-shadow: 0 2px 4px rgba(6, 182, 212, 0.3);
         }
 
+        .status-badge.MANUAL {
+            background: linear-gradient(135deg, var(--manual-purple) 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        }
+
+        .status-badge.WARN {
+            background: linear-gradient(135deg, var(--warning-amber) 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
         .remediation {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%);
             border: 2px solid rgba(245, 158, 11, 0.2);
@@ -387,6 +420,25 @@ class HTMLReporter:
 
         .remediation::before {
             content: '⚠️';
+            position: absolute;
+            top: -8px;
+            left: 15px;
+            background: white;
+            padding: 0 8px;
+            font-size: 1.2rem;
+        }
+
+        .manual-verification {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .manual-verification::before {
+            content: '👤';
             position: absolute;
             top: -8px;
             left: 15px;
@@ -499,7 +551,10 @@ class HTMLReporter:
 
     @staticmethod
     def _generate_summary_cards(report: BenchmarkReport) -> str:
-        """Generate summary cards"""
+        """Generate summary cards with Manual category"""
+        # Calculate manual controls count
+        manual_count = getattr(report, 'manual', 0)
+        
         return f"""
         <div class="summary-cards">
             <div class="summary-card">
@@ -518,19 +573,28 @@ class HTMLReporter:
                 <h3>{report.skipped}</h3>
                 <p>Skipped</p>
             </div>
+            <div class="summary-card manual">
+                <h3>{manual_count}</h3>
+                <p>Manual</p>
+            </div>
         </div>"""
 
     @staticmethod
     def _generate_section_summaries(report: BenchmarkReport) -> str:
-        """Generate section summaries"""
+        """Generate section summaries with Manual controls"""
         sections_html = ""
 
         for section in report.section_summaries:
             section_results = [r for r in report.results if r.section == section.section_name]
             controls_html = ""
 
+            # Calculate manual controls in this section
+            manual_controls = sum(1 for r in section_results if getattr(r, 'status', None) and r.status.value == 'MANUAL')
+
             for result in section_results:
-                status_class = result.status.value.lower()
+                status_value = getattr(result.status, 'value', str(result.status)) if result.status else 'UNKNOWN'
+                status_class = status_value.lower()
+                
                 controls_html += f"""
                 <div class="control {status_class}">
                     <div class="control-header" onclick="toggleControl(this)">
@@ -538,7 +602,7 @@ class HTMLReporter:
                             <strong>{result.control_id}: {result.title}</strong>
                         </div>
                         <div>
-                            <span class="status-badge {result.status.value}">{result.status.value}</span>
+                            <span class="status-badge {status_value}">{status_value}</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -570,6 +634,20 @@ class HTMLReporter:
                             <div class="audit-cmd">{result.audit_command}</div>
                         </div>"""
 
+                # Add manual verification section for MANUAL controls
+                if status_value == 'MANUAL':
+                    manual_steps = getattr(result, 'manual_steps', [])
+                    if manual_steps:
+                        steps_html = "<ul>" + "".join([f"<li>{step}</li>" for step in manual_steps]) + "</ul>"
+                    else:
+                        steps_html = "<p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>"
+                    
+                    controls_html += f"""
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            {steps_html}
+                        </div>"""
+
                 if result.remediation:
                     controls_html += f"""
                         <div class="remediation">
@@ -588,6 +666,10 @@ class HTMLReporter:
                     </div>
                 </div>"""
 
+            # Calculate statistics for this section
+            total_automated = section.passed + section.failed + section.skipped
+            automated_pass_rate = (section.passed / total_automated * 100) if total_automated > 0 else 0
+
             sections_html += f"""
             <div class="section-summary">
                 <div class="section-header" onclick="toggleSection(this)">
@@ -596,6 +678,8 @@ class HTMLReporter:
                         <div class="section-stat">Total: {section.total_controls}</div>
                         <div class="section-stat">Passed: {section.passed}</div>
                         <div class="section-stat">Failed: {section.failed}</div>
+                        <div class="section-stat">Skipped: {section.skipped}</div>
+                        <div class="section-stat manual">Manual: {manual_controls}</div>
                         <div class="section-stat">Pass Rate: {section.pass_percentage:.1f}%</div>
                     </div>
                     <div class="progress-bar">
@@ -621,30 +705,51 @@ class HTMLReporter:
         return """
     <script>
         function toggleSection(element) {
+            console.log('toggleSection called');
             const container = element.parentElement.querySelector('.controls-container');
             const chevron = element.querySelector('.chevron');
 
-            container.classList.toggle('expanded');
-            chevron.classList.toggle('rotated');
+            if (container && chevron) {
+                container.classList.toggle('expanded');
+                chevron.classList.toggle('rotated');
+                console.log('Section toggled:', container.classList.contains('expanded'));
+            } else {
+                console.error('Could not find container or chevron');
+            }
         }
 
         function toggleControl(element) {
+            console.log('toggleControl called');
             const body = element.nextElementSibling;
             const chevron = element.querySelector('.chevron');
 
-            body.classList.toggle('expanded');
-            chevron.classList.toggle('rotated');
+            if (body && chevron) {
+                body.classList.toggle('expanded');
+                chevron.classList.toggle('rotated');
+                console.log('Control toggled:', body.classList.contains('expanded'));
+            } else {
+                console.error('Could not find body or chevron');
+            }
         }
 
         // Auto-expand failed sections with animation
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up sections');
+            
             const failedSections = document.querySelectorAll('.section-summary');
+            console.log('Found sections:', failedSections.length);
+            
             failedSections.forEach((section, index) => {
                 const failedControls = section.querySelectorAll('.control.fail');
-                if (failedControls.length > 0) {
+                const manualControls = section.querySelectorAll('.control.manual');
+                
+                if (failedControls.length > 0 || manualControls.length > 0) {
                     setTimeout(() => {
                         const header = section.querySelector('.section-header');
-                        toggleSection(header);
+                        if (header) {
+                            console.log('Auto-expanding section:', header.textContent);
+                            toggleSection(header);
+                        }
                     }, index * 200); // Stagger the animations
                 }
             });
@@ -653,9 +758,12 @@ class HTMLReporter:
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
                 });
             });
         });
