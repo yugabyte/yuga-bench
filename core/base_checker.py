@@ -87,7 +87,8 @@ class BaseChecker(ABC):
             message=message,
             section=control.section,
             profile_level=control.profile_applicability[0] if control.profile_applicability else "",
-            audit_command=control.audit
+            audit_command=control.audit,
+            remediation=control.remediation
         )
 
     def _extract_setting_name_from_audit(self, audit_command: str) -> str:
