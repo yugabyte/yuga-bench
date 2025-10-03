@@ -20,6 +20,9 @@
             --success-green: #22C55E;
             --error-red: #EF4444;
             --info-cyan: #06B6D4;
+            --warning-amber: #F59E0B;
+            --manual-purple: #8B5CF6;
+            --manual-light-purple: #A78BFA;
         }
 
         * {
@@ -102,7 +105,7 @@
 
         .summary-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2.5rem;
         }
@@ -146,6 +149,10 @@
             border-left-color: var(--yugabyte-dark-gray);
             background: linear-gradient(135deg, rgba(45, 45, 45, 0.05) 0%, white 100%);
         }
+        .summary-card.manual {
+            border-left-color: var(--manual-purple);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, white 100%);
+        }
 
         .summary-card h3 {
             font-size: 3rem;
@@ -165,6 +172,10 @@
         .summary-card.skipped h3 {
             color: var(--yugabyte-dark-gray);
             text-shadow: 0 2px 4px rgba(45, 45, 45, 0.2);
+        }
+        .summary-card.manual h3 {
+            color: var(--manual-purple);
+            text-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
         }
 
         .summary-card p {
@@ -222,6 +233,12 @@
             box-shadow: 0 2px 4px rgba(255, 105, 0, 0.1);
         }
 
+        .section-stat.manual {
+            border-color: var(--manual-purple);
+            color: var(--manual-purple);
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.1);
+        }
+
         .progress-bar {
             width: 100%;
             height: 10px;
@@ -277,6 +294,10 @@
         .control.info {
             border-left: 5px solid var(--info-cyan);
             box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.1);
+        }
+        .control.manual {
+            border-left: 5px solid var(--manual-purple);
+            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.1);
         }
 
         .control-header {
@@ -338,6 +359,18 @@
             box-shadow: 0 2px 4px rgba(6, 182, 212, 0.3);
         }
 
+        .status-badge.MANUAL {
+            background: linear-gradient(135deg, var(--manual-purple) 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        }
+
+        .status-badge.WARN {
+            background: linear-gradient(135deg, var(--warning-amber) 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
         .remediation {
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(252, 211, 77, 0.1) 100%);
             border: 2px solid rgba(245, 158, 11, 0.2);
@@ -349,6 +382,25 @@
 
         .remediation::before {
             content: '⚠️';
+            position: absolute;
+            top: -8px;
+            left: 15px;
+            background: white;
+            padding: 0 8px;
+            font-size: 1.2rem;
+        }
+
+        .manual-verification {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(196, 181, 253, 0.1) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .manual-verification::before {
+            content: '👤';
             position: absolute;
             top: -8px;
             left: 15px;
@@ -456,7 +508,7 @@
             <p><strong>Cluster:</strong> localhost:5433</p>
             <p><strong>Database:</strong> yugabyte</p>
             <p><strong>Version:</strong> PostgreSQL 15.12-YB-2.25.2.0-b0 on aarch64-unknown-linux-gnu, compiled by clang version 19.1.0 (https://github.com/yugabyte/llvm-project.git a2a6b655e14e7fa1fcf1011a6cb29cb8575249c0), 64-bit</p>
-            <p><strong>Scan Time:</strong> 2025-09-15 17:10:38</p>
+            <p><strong>Scan Time:</strong> 2025-10-03 10:21:39</p>
         </div>
         
         <div class="summary-cards">
@@ -465,30 +517,36 @@
                 <p>Total Checks</p>
             </div>
             <div class="summary-card passed">
-                <h3>6</h3>
+                <h3>20</h3>
                 <p>Passed</p>
             </div>
             <div class="summary-card failed">
-                <h3>2</h3>
+                <h3>12</h3>
                 <p>Failed</p>
             </div>
             <div class="summary-card skipped">
-                <h3>37</h3>
+                <h3>5</h3>
                 <p>Skipped</p>
+            </div>
+            <div class="summary-card manual">
+                <h3>24</h3>
+                <p>Manual</p>
             </div>
         </div>
         
             <div class="section-summary">
                 <div class="section-header" onclick="toggleSection(this)">
-                    <h3>Installation and Patches <span class="chevron">▶</span></h3>
+                    <h3>Access Control and Password Policies <span class="chevron">▶</span></h3>
                     <div class="section-stats">
-                        <div class="section-stat">Total: 8</div>
-                        <div class="section-stat">Passed: 1</div>
+                        <div class="section-stat">Total: 5</div>
+                        <div class="section-stat">Passed: 0</div>
                         <div class="section-stat">Failed: 0</div>
-                        <div class="section-stat">Pass Rate: 12.5%</div>
+                        <div class="section-stat">Skipped: 1</div>
+                        <div class="section-stat manual">Manual: 4</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 12.5%;"></div>
+                        <div class="progress-fill" style="width: 0.0%;"></div>
                     </div>
                 </div>
                 <div class="controls-container">
@@ -496,10 +554,370 @@
                 <div class="control skip">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
-                            <strong>1.1: Ensure packages are obtained from authorized repositories</strong>
+                            <strong>5.1: Ensure that authentication is enabled for YCQL interface of the YugabyteDB</strong>
                         </div>
                         <div>
                             <span class="status-badge SKIP">SKIP</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>⏳ This check has not been implemented yet.</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Run the following command to verify whether authentication is enabled on the YCQL
+interface of the YugabyteDB server.
+The YugabyteDB configuration files can be found in the conf directory of tarballs. For
+packages, the configuration files will be located in /home/user/var/conf.
+cat ts.config | grep use_cassandra_authentication
+If use_cassandra_authentication is set to false, then this is a finding.
+</div>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br>./bin/yb-tserver --use_cassandra_authentication=true<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>5.2: Ensure that the default password changed for the cassandra role</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Connect to YugabyteDB database via YCQL to verify whether the cassandra role has
+default password.
+./bin/ycqlsh -u cassandra -p cassandra
+If the connection is successful this is a finding.
+</div>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Change the password for the cassandra role by issuing the following command:<br>cassandra@ycqlsh> ALTER ROLE cassandra WITH PASSWORD = 'new_password';<br>Where 'new_password' is replaced with the password of your choosing.<br>Verify the default password no longer works:<br>./bin/ycqlsh -u cassandra -p cassandra<br>Connection error:<br>... Provided username 'cassandra' and/or password are incorrect ...<br>You can now connect to the cluster using the new password:<br>./bin/ycqlsh -u cassandra -p new_password<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>5.3: Ensure the cassandra and superuser roles are separate</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">To verify the configuration, run the following query:
+cassandra@ycqlsh> SELECT role FROM system_auth.roles WHERE is_superuser =
+True;
+role
+-----------
+cassandra
+(1 rows)
+If cassandara or any unapproved role is returned, this is a finding.
+</div>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            To remediate a misconfiguration, perform the following steps:<br>1. Execute the following command:<br>create role '<NEW_ROLE_HERE>' with password='<NEW_PASSWORD_HERE>' and<br>login=TRUE and superuser=TRUE ;<br>grant all permissions on all keyspaces to <NEW_ROLE_HERE>;<br>Note: Replace <NEW_ROLE_HERE> with the desired role and <NEW_PASSWORD_HERE><br>with a password.<br>1. Verify the new role is working.<br>2. Remove the superuser role from the cassandra account by executing the<br>following command:<br>ALTER ROLE cassandra WITH SUPERUSER=FALSE;<br>To enhance security further, disable login ability for this role by issuing the following<br>command:<br>ALTER ROLE cassandra WITH LOGIN=FALSE;<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>5.4: Ensure there are no unnecessary roles or excessive privileges</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Remove any unnecessary roles and/or permissions in accordance with organizational<br>needs.<br>Drop unnecessary roles by issuing the following command:<br>cassandra@ycqlsh> DROP ROLE IF EXISTS developer<br>Alternatively, you can revoke permissions. For example, you can revoke the<br>engineering role from the user john as follows:<br>cassandra@ycqlsh> REVOKE engineering FROM john;<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>5.5: Ensure that YCQL only listens for network connections on authorized interfaces</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Check the value of cql_proxy_bind_address in the ts.config. If
+cql_proxy_bind_address is set to a non-authorized IP address or port, this is a finding.
+cat ts.config | grep cql_proxy_bind_address
+</div>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br>./bin/yb-tserver --cql_proxy_bind_address <ip address>:<port><br>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Connection and Login <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 2</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Skipped: 0</div>
+                        <div class="section-stat manual">Manual: 2</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>6.1: Ensure login via local UNIX Domain Socket is configured correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Newly created data clusters are empty of data and have two user accounts, the
+superusers yugabyte and postgres. By default, the data cluster superuser is named
+after the UNIX account yugabyte. Login authentication is tested via UNIX DOMAIN
+SOCKETS by the UNIX user account yugabyte, the default account, and set_user has
+not yet been configured:
+# ./bin/yugabyte
+yugabyte=#
+Login attempts by another UNIX user account as the superuser should be denied:
+# su - user1 # whoami user1
+# ./bin/ysqlsh -U yugabyte -d yugabyte
+ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+# exit
+This test demonstrates that not only is logging in as the superuser blocked, but so is
+logging in as another user:
+# su - user2 # whoami user2
+# ./bin/ysqlsh -U yugabyte -d yugabyte
+ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+# ./bin/ysqlsh -U user1 -d yugabyte
+ysqlsh: FATAL: Peer authentication failed for user "user1"
+# ./bin/ysqlsh -U user2 -d yugabyte
+yugabyte=#
+</div>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Creation of a database account that matches the local account allows PEER<br>authentication:<br># ./bin/ysqlsh -c "CREATE ROLE user1 WITH LOGIN;" CREATE ROLE<br>Execute the following as the UNIX user account, the default authentication rules should<br>now permit the login:<br># su - user1<br># whoami user1<br># ./bin/ysqlsh -d yugabyte<br>yugabyte=#<br>As per the host-based authentication rules in $PGDATA/pg_hba.conf, all login attempts<br>via UNIX DOMAIN SOCKETS are processed on the line beginning with local.<br>Once edited, the server process must reload the authentication file before it can take<br>effect. Improperly configured rules cannot update i.e. the old rules remain in place. The<br>YugabyteDB logs will report the outcome of the SIGHUP:<br>yugabyte=# select pg_reload_conf();<br>pg_reload_conf<br>----------------<br>t<br>(1 row)<br>Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br>./bin/yb-tserver --ysql_hba_conf_csv<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>6.2: Ensure login via 'host' TCP/IP Socket is configured correctly</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Confirm a login attempt has been made by looking for a logged error message detailing<br>the nature of the authenticating failure. In the case of failed login attempts, whether<br>encrypted or unencrypted, check the following:<br>• The server should be sitting on a port exposed to the remote connecting host i.e.<br>NOT ip address 127.0.0.1<br>listen_addresses = '*'<br>• An authenticating rule must exist in the file ysql_hba.conf<br>This example permits only encrypted sessions for the yugabyte role and denies all<br>unencrypted sessions for the yugabyte role:<br># TYPE DATABASE<br>USER<br>ADDRESS<br>METHOD<br>hostssl all<br>yugabyte<br>0.0.0.0/0<br>scram-sha-256<br>hostnossl all<br>yugabyte<br>0.0.0.0/0<br>reject<br>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Directory and File Permissions <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 1</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Skipped: 0</div>
+                        <div class="section-stat manual">Manual: 1</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>2.1: Ensure the file permissions mask is correct</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">To view the mask's current setting, execute the following commands:
+# whoami
+root
+# su - yugabyte
+# whoami
+yugabyte
+# umask 0022
+The umask must be 077 or more restrictive for the yugabyte user, otherwise, this is a
+fail.
+</div>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Depending upon the yugabyte user's environment, the umask is typically set in the<br>initialization file .bash_profile, but may also be set in .profile or .bashrc. To set the<br>umask, add the following to the appropriate profile file:<br># whoami yugabyte<br># cd ~<br># ls -ld .{bash_profile,profile,bashrc}<br>ls: cannot access '.bash_profile': No such file or directory<br>ls: cannot access '.profile': No such file or directory<br>ls: cannot access '.bashrc': No such file or directory<br># echo "umask 077" >> .bash_profile<br># source .bash_profile<br># umask 0077<br>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Installation and Patches <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 8</div>
+                        <div class="section-stat">Passed: 0</div>
+                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Skipped: 4</div>
+                        <div class="section-stat manual">Manual: 4</div>
+                        <div class="section-stat">Pass Rate: 0.0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0.0%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>1.1: Ensure packages are obtained from authorized repositories</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -538,15 +956,23 @@ If the checksum of the binary packages does not match the checksum from
 download.yugabyte.com, this is a fail.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Alter the configured repositories so they only include valid and authorized sources of<br>packages.<br>#!/bin/bash<br># URL of the file to download<br>FILE_URL="https://downloads.yugabyte.com/releases/2.20.0.0/yugabyte-2.20.0.0-<br>b1-linux-x86_64.tar.gz"<br># Download the file<br>wget $FILE_URL<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>1.2: Ensure systemd Service Files Are Enabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -583,34 +1009,34 @@ LimitNOFILE=4096
 WantedBy=multi-user.target
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Irrespective of package source, YugabyteDB services can be identified because it<br>typically includes the text string "yugabyted". PGDG installs do not automatically<br>register the service as a "want" of the default systemd target. Multiple instances of<br>YugabyteDB services often distinguish themselves using a version number.<br># whoami root<br># systemctl enable yugabyted<br>Created symlink /etc/systemd/system/multi-user.target.wants/yugabyted.service<br>→ /usr/lib/systemd/system/yugabyted.service.<br># systemctl list-dependencies multi-user.target | grep -i yugabyted<br>├─yugabyted.service<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control pass">
+                <div class="control skip">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>1.3: Ensure Data Cluster Initialized Successfully</strong>
                         </div>
                         <div>
-                            <span class="status-badge PASS">PASS</span>
+                            <span class="status-badge SKIP">SKIP</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Installation integrity checks passed</span>
+                            <span>⏳ This check has not been implemented yet.</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Expected:</span>
-                            <span>All system components accessible</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Actual:</span>
-                            <span>All basic checks passed</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -620,15 +1046,19 @@ Next, check the cluster status for all YB-TServer.
 .bin/yb-admin -init_master_addrs <master ip address> list_all_tablet_servers
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            In the case of a cluster initialization failure, please visit YugabyteDB Troubleshooting<br>guide: https://docs.yugabyte.com/preview/troubleshoot/<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>1.4: Ensure a separate user and group exist for YugabyteDB</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -650,6 +1080,14 @@ If either the group or user do not exist, or if the user is not a member of the 
 a finding.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Create a group for YugabyteDB (if it does not already exist)<br>sudo groupadd yugabyte<br>Create a user which is only used for running YugabyteDB and its related processes<br>sudo useradd -m -d /home/yugabyte -s /bin/bash -g yugabyte -u <USERID_NUMBER><br>yugabyte<br>Replacing <USERID_NUMBER> with a number not already used on the server<br>
+                        </div>
                     </div>
                 </div>
                 <div class="control skip">
@@ -665,7 +1103,7 @@ a finding.
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Generic installation check - manual verification required</span>
+                            <span>⏳ This check has not been implemented yet.</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
@@ -686,6 +1124,10 @@ exit 1
 If an old/unsupported version of Python is installed this is a finding.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            1. Uninstall the old/unsupported version of Python, if present.<br>2. Download the latest compatible release of the Python:<br>www.python.org/downloads<br>3. Follow the provided installation instructions to complete the install.<br>
+                        </div>
                     </div>
                 </div>
                 <div class="control skip">
@@ -701,7 +1143,7 @@ If an old/unsupported version of Python is installed this is a finding.
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Generic installation check - manual verification required</span>
+                            <span>⏳ This check has not been implemented yet.</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
@@ -722,6 +1164,10 @@ If an old/unsupported version of Python is installed this is a finding.
 If an old/unsupported version of YugabyteDB is installed this is a finding
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Create a group for yugabyte (if it does not already exist)<br>sudo groupadd yugabyte<br>Create a user which is only used for running YugabyteDB and its related processes.<br>sudo groupadd -m -d <DIRECTORY_WHERE_YUGABYTEDB_INSTALLED> -s /bin/bash -g<br>yugabyte -u <USERID_NUMBER> yugabyte<br>Replacing <DIRECTORY_WHERE_YUGABYTEDB_INSTALLED with the full path of where<br>YugabyteDB binaries are installed.<br>Replacing <USERID_NUMBER> with a number not already used on the server<br>
+                        </div>
                     </div>
                 </div>
                 <div class="control skip">
@@ -737,7 +1183,7 @@ If an old/unsupported version of YugabyteDB is installed this is a finding
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Generic installation check - manual verification required</span>
+                            <span>⏳ This check has not been implemented yet.</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
@@ -748,15 +1194,19 @@ If an old/unsupported version of YugabyteDB is installed this is a finding
                             <div class="audit-cmd">Logon to the server where YugabyteDB master service is running.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Create a group for yugabyte (if it does not already exist)<br>sudo groupadd yugabyte<br>Create a user which is only used for running YugabyteDB and its related processes.<br>sudo groupadd -m -d <DIRECTORY_WHERE_YUGABYTEDB_INSTALLED> -s /bin/bash -g<br>yugabyte -u <USERID_NUMBER> yugabyte<br>Replacing <DIRECTORY_WHERE_YUGABYTEDB_INSTALLED with the full path of where<br>YugabyteDB binaries are installed.<br>Replacing <USERID_NUMBER> with a number not already used on the server<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>1.8: Ensure clocks are synchronized on all node</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -778,56 +1228,13 @@ ps -aef | grep chronyd
 If NTP is not configured or clocks are out-of-sync then this is a finding.
 </div>
                         </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div class="section-summary">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <h3>Directory and File Permissions <span class="chevron">▶</span></h3>
-                    <div class="section-stats">
-                        <div class="section-stat">Total: 1</div>
-                        <div class="section-stat">Passed: 0</div>
-                        <div class="section-stat">Failed: 0</div>
-                        <div class="section-stat">Pass Rate: 0.0%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0.0%;"></div>
-                    </div>
-                </div>
-                <div class="controls-container">
-                    
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>2.1: Ensure the file permissions mask is correct</strong>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
                         </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">To view the mask's current setting, execute the following commands:
-# whoami
-root
-# su - yugabyte
-# whoami
-yugabyte
-# umask 0022
-The umask must be 077 or more restrictive for the yugabyte user, otherwise, this is a
-fail.
-</div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Install and start the time protocol on every node in the YugabyteDB cluster.<br>
                         </div>
                     </div>
                 </div>
@@ -838,23 +1245,25 @@ fail.
                     <h3>Logging Monitoring and Auditing <span class="chevron">▶</span></h3>
                     <div class="section-stats">
                         <div class="section-stat">Total: 26</div>
-                        <div class="section-stat">Passed: 4</div>
-                        <div class="section-stat">Failed: 1</div>
-                        <div class="section-stat">Pass Rate: 15.4%</div>
+                        <div class="section-stat">Passed: 18</div>
+                        <div class="section-stat">Failed: 6</div>
+                        <div class="section-stat">Skipped: 0</div>
+                        <div class="section-stat manual">Manual: 2</div>
+                        <div class="section-stat">Pass Rate: 75.0%</div>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 15.384615384615385%;"></div>
+                        <div class="progress-fill" style="width: 75.0%;"></div>
                     </div>
                 </div>
                 <div class="controls-container">
                     
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.1: Logging Rationale</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -866,6 +1275,14 @@ fail.
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Not defined yet
                         </div>
                     </div>
                 </div>
@@ -952,24 +1369,32 @@ files, one for each day of the week (e.g. postgresql-Mon.log, postgresql-Tue.log
                         </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.4: Ensure the log file permissions are set correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Log file permissions check requires manual OS-level verification</span>
+                            <span>Log file permissions are correctly set: 0600</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>0600</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>0600</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1108,24 +1533,32 @@ log_rotation_size
                         </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.8: Ensure the correct syslog facility is selected</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
+                            <span>syslog_facility is properly configured: local0</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>['local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', 'local7']</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>local0</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1139,24 +1572,32 @@ local0
                         </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.9: Ensure syslog messages are not suppressed</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
+                            <span>Syslog sequence numbers are enabled - messages will not be suppressed</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>on</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1171,24 +1612,32 @@ on
                         </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.10: Ensure syslog messages are not lost due to size</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
+                            <span>Syslog message splitting is enabled - long messages will not be lost</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>on</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1203,24 +1652,32 @@ on
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.11: Ensure the program name for YugabyteDB syslog messages is correct</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting syslog_ident: postgres</span>
+                            <span>Syslog identifier is properly set: postgres</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Descriptive database identifier</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>postgres</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1234,24 +1691,32 @@ postgres
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.12: Ensure the correct messages are written to the server log </strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_min_messages: warning</span>
+                            <span>Log minimum messages correctly set: warning</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>warning</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>warning</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1265,24 +1730,32 @@ warning
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.13: Ensure the correct YSQL statements generating errors are recorded</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_min_error_statement: error</span>
+                            <span>Error statement logging properly configured: error</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>error or higher</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>error</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1297,24 +1770,32 @@ If not configured to at least ERROR, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.14: Ensure 'debug_print_parse' is disabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting debug_print_parse: off</span>
+                            <span>Debug print parse correctly disabled</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1329,24 +1810,32 @@ If not configured to off, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.15: Ensure 'debug_print_rewritten' is disabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting debug_print_rewritten: off</span>
+                            <span>Debug print rewritten correctly disabled</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1361,24 +1850,32 @@ If not configured to off, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.16: Ensure 'debug_print_plan' is disabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting debug_print_plan: off</span>
+                            <span>Debug print plan correctly disabled</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1393,24 +1890,32 @@ If not configured to off, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.17: Ensure 'debug_pretty_print' is enabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting debug_pretty_print: on</span>
+                            <span>Debug pretty print correctly enabled</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>on</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1425,24 +1930,32 @@ If not configured to on, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.18: Ensure 'log_connections' is enabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_connections: off</span>
+                            <span>Connection logging is not enabled: off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1455,26 +1968,38 @@ off
 If not configured to on, this is a fail.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br><br>./bin/yb-tserver --ysql_pg_conf_csv=“log_filename="log_connections='on'"<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.19: Ensure 'log_disconnections' is enabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_disconnections: off</span>
+                            <span>Disconnection logging is not enabled: off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1487,26 +2012,38 @@ off
 If not configured to on, this is a fail.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br><br>./bin/yb-tserver --ysql_pg_conf_csv="log_disconnections='on'"<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.20: Ensure 'log_error_verbosity' is set correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_error_verbosity: default</span>
+                            <span>Log error verbosity correctly set to verbose</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>verbose</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>default</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1521,24 +2058,32 @@ If not configured to verbose, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.21: Ensure 'log_hostname' is set correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_hostname: off</span>
+                            <span>Log hostname correctly disabled</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1553,24 +2098,32 @@ If not configured to off, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.22: Ensure 'log_line_prefix' is set correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_line_prefix: %m [%p] </span>
+                            <span>log_line_prefix missing required components: %l (session line number), %d (database name), %u (user name), %a (application name), %h (remote host)</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>%m [%p]: [%l-1] db=%d,user=%u,app=%a,client=%h (minimum)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>%m [%p] </span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1584,26 +2137,38 @@ If the prefix does not at a minimum include %m [%p]: [%l-1]
 db=%d,user=%u,app=%a,client=%h, this is a fail.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br><br>./bin/yb-tserver --ysql_pg_conf_csv="log_line_prefix=’%m [%p]: [%l-1]’"<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.23: Ensure 'log_statement' is set correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_statement: none</span>
+                            <span>Statement logging is disabled - security risk</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>ddl, mod, or all</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>none</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1616,26 +2181,38 @@ none
 If log_statement is set to none then this is a fail.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br><br>./bin/yb-tserver --ysql_pg_conf_csv="log_line_prefix=’%m [%p]: [%l-1]’"<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control pass">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.1.24: Ensure 'log_timezone' is set correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge PASS">PASS</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting log_timezone: UTC</span>
+                            <span>Log timezone properly set: UTC</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>UTC or GMT</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>UTC</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1651,24 +2228,32 @@ this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.2: Ensure the YugbayteDB Audit Extension (pgAudit) is enabled</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Logging setting shared_preload_libraries: pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan</span>
+                            <span>pgAudit is loaded but no audit components are enabled</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Audit components enabled (READ,WRITE,FUNCTION,ROLE,DDL,MISC)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>pgaudit.log = none</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -1696,15 +2281,26 @@ DDL: All DDL that is not included in the ROLE class.
 MISC: Miscellaneous commands, e.g. DISCARD, FETCH, CHECKPOINT, VACUUM.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            After configuring the YB-TServer and starting the cluster, create the pgAudit extension<br>by executing the following YSQL statement:<br>yugabyte=# CREATE EXTENSION IF NOT EXISTS pgaudit;<br>CREATE EXTENSION<br>You only need to run this statement on a single node, and it will apply across your<br>cluster.<br>Use the following steps to configure audit logging in a YugabyteDB cluster with bare<br>minimum configurations.<br>Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br>./bin/yb-tserver --<br>ysql_pg_conf_csv="pgaudit.log='DDL',pgaudit.log_level=notice,pgaudit.log_clie<br>nt=ON"<br>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Impact:</span>
+                            <span>Depending on settings, it is possible for pgAudit to generate an enormous volume of
+logging. Be careful to determine exactly what needs to be audit logged in your
+environment to avoid logging too much.
+</span>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>3.3: Ensure that auditing is enabled for YCQL</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -1725,6 +2321,230 @@ cat ts.config | grep ycql_enable_audit_log
 If not configured to true, this is a fail.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br><br>./bin/yb-tserver <options> --ycql_enable_audit_log=true<br>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="section-summary">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <h3>Special Configuration Considerations <span class="chevron">▶</span></h3>
+                    <div class="section-stats">
+                        <div class="section-stat">Total: 4</div>
+                        <div class="section-stat">Passed: 1</div>
+                        <div class="section-stat">Failed: 2</div>
+                        <div class="section-stat">Skipped: 0</div>
+                        <div class="section-stat manual">Manual: 1</div>
+                        <div class="section-stat">Pass Rate: 33.3%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 33.33333333333333%;"></div>
+                    </div>
+                </div>
+                <div class="controls-container">
+                    
+                <div class="control manual">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>8.1: Ensure base backups are configured and functional</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge MANUAL">MANUAL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Manual control - requires manual verification</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Verify snapshots exist by executing the list_snapshots command, as follows:
+./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
+All the snapshots in the cluster are listed, along with their statuses.
+Snapshot UUID State Creation Time
+0d4b4935-2c95-4523-95ab-9ead1e95e794 COMPLETE 2023-04-20
+00:20:38.214201
+</div>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Using distributed snapshots allows you to back up a database and then restore it in<br>case of a software or operational error, with minimal recovery time objectives (RTO) and<br>overhead.<br>To back up a database, create a snapshot using the create_database_snapshot<br>command, as follows:<br>./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100><br>create_database_snapshot ysql.<database_name><br>A unique ID for the snapshot is returned, as shown in the following sample output:<br>Started snapshot creation: 0d4b4935-2c95-4523-95ab-9ead1e95e794<br>You can then use this ID to check the status of the snapshot, delete it, or use it to<br>restore the database.<br>The create_database_snapshot command exits immediately, but the snapshot may take<br>some time to complete. Before using the snapshot, verify its status by executing the<br>list_snapshots command, as follows:<br>./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots<br>All the snapshots in the cluster are listed, along with their statuses<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control fail">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>8.2: Ensure YugabyteDB configuration files are outside the data cluster</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge FAIL">FAIL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Critical configuration files are inside data directory: config_file: /home/yugabyte/yb_data/data/pg_data/ysql_pg.conf; hba_file: /home/yugabyte/yb_data/data/pg_data/ysql_hba.conf; ident_file: /home/yugabyte/yb_data/data/pg_data/ysql_ident.conf</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Configuration files outside data cluster directory</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>data_directory: /home/yugabyte/yb_data/data/pg_data; Inside data dir: 3</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following commands to verify the configuration is correct:
+yugabyte=# select name, setting from pg_settings where name ~ '.*_file$';
+name | setting
+--------------------+--------------------------------------------------------
+-
+config_file | /home/user/var/data/pg_data/ysql_pg.conf
+external_pid_file |
+hba_file | /home/user/var/data/pg_data/ysql_hba.conf
+ident_file | /home/user/var/data/pg_data/pg_ident.conf
+ssl_ca_file |
+ssl_cert_file | server.crt
+ssl_crl_file |
+ssl_dh_params_file |
+ssl_key_file | server.key
+(9 rows)
+</div>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Follow these steps to remediate the configuration file locations and permissions:<br>• Determine appropriate locations for relocatable configuration files based on your<br>organization's security policies. If necessary, relocate and/or rename<br>configuration files outside of the data cluster.<br>• Ensure their file permissions are restricted as much as possible, i.e. only<br>superuser read access.<br>• Change the settings accordingly in the ysql_pg.conf configuration file via<br>GFLAGs.<br>• Restart the database cluster for the changes to take effect.<br>
+                        </div>
+                    </div>
+                </div>
+                <div class="control pass">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>8.3: Ensure YugabyteDB subdirectory locations are outside the data cluster</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge PASS">PASS</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Subdirectories are located outside data cluster: log_directory: /home/yugabyte/yb_data/data/yb-data/tserver/logs. NOTE: Manual verification of file/directory permissions still required (only superusers should have access).</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Subdirectories outside data cluster with restrictive permissions</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>data_directory: /home/yugabyte/yb_data/data/pg_data; Outside: 1 dirs</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the configuration is correct.
+Alternatively, inspect the parameter settings in the ysql_pg.conf configuration file.
+yugabyte=# select name, setting from pg_settings where (name ~
+'_directory$');
+name | setting
+----------------------+------------------------------------------------------
+--
+data_directory | /home/user/var/data/pg_data
+default_tablespace |
+log_directory | /home/user/var/data/yb-data/tserver/logs
+stats_temp_directory | pg_stat_tmp
+temp_tablespaces |
+(5 rows)
+Inspect the file and directory permissions for all returned values. Only superusers and
+authorized users should have access control rights for these files and directories. If
+permissions are not highly restrictive, this is a fail.
+</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control fail">
+                    <div class="control-header" onclick="toggleControl(this)">
+                        <div>
+                            <strong>8.4: Ensure miscellaneous configuration settings are correct</strong>
+                        </div>
+                        <div>
+                            <span class="status-badge FAIL">FAIL</span>
+                            <span class="chevron">▶</span>
+                        </div>
+                    </div>
+                    <div class="control-body">
+                        <div class="detail-row">
+                            <span class="detail-label">Message:</span>
+                            <span>Security concerns found: unix_socket_directories: /tmp/.yb.yugabyte01:5433 (world-writable directory - potential security risk). Manual verification of file/directory permissions required (only superusers should have access).</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Profile Level:</span>
+                            <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>Secure configuration with restrictive permissions</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>Secure: 5 settings; Concerns: 1 settings; Settings: dynamic_library_path=$libdir; external_pid_file=; local_preload_libraries=; session_preload_libraries=; shared_preload_libraries=pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan; unix_socket_directories=/tmp/.yb.yugabyte01:5433</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Audit Command:</span>
+                            <div class="audit-cmd">Execute the following YSQL statement to verify the configuration is correct.
+Alternatively, inspect the parameter settings in the ysql_pg.conf configuration file.
+yugabyte=# select name, setting from pg_settings where name in
+('external_pid_file',
+'unix_socket_directories','shared_preload_libraries','dynamic_library_path','
+local_preload_libraries','session_preload_libraries');
+name | setting
+---------------------------+-------------------------------------------------
+------
+dynamic_library_path | $libdir
+external_pid_file |
+local_preload_libraries |
+session_preload_libraries |
+shared_preload_libraries |
+pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan
+unix_socket_directories | /tmp/
+(6 rows)
+Inspect the file and directory permissions for all returned values. Only superusers
+should have access control rights for these files and directories. If permissions are not
+highly restricted, this is a fail.
+</div>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Follow these steps to remediate the configuration:<br>• Determine permissions based on your organization's security policies.<br>• Relocate all files and ensure their permissions are restricted as much as<br>possible, i.e. only superuser read access.<br>• Ensure all directories where these files are located have restricted permissions<br>such that the superuser can read but not write.<br>• Lastly, change the settings accordingly in the ysql_pg.conf via GFLAGs and<br>restart the database cluster for changes to take effect.<br>
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -1736,21 +2556,23 @@ If not configured to true, this is a fail.
                         <div class="section-stat">Total: 6</div>
                         <div class="section-stat">Passed: 1</div>
                         <div class="section-stat">Failed: 0</div>
-                        <div class="section-stat">Pass Rate: 16.7%</div>
+                        <div class="section-stat">Skipped: 0</div>
+                        <div class="section-stat manual">Manual: 5</div>
+                        <div class="section-stat">Pass Rate: 100.0%</div>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 16.666666666666664%;"></div>
+                        <div class="progress-fill" style="width: 100.0%;"></div>
                     </div>
                 </div>
                 <div class="controls-container">
                     
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>4.1: Ensure sudo is configured correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -1783,15 +2605,23 @@ This shows that the user2 user is configured properly for sudo access by being a
 member of the dba group.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            As superuser root, execute the following commands:<br># echo '%dba ALL= /bin/su - yugabyte' > /etc/sudoers.d/yugabyte<br># chmod 600 /etc/sudoers.d/yugabyte<br>This grants any Operating System user that is a member of the dba group to use sudo<br>su - yugabyte to become the yugabyte user.<br>Ensure that all Operating System user's that need such access are members of the<br>group.<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>4.2: Ensure excessive administrative privileges are revoked</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -1803,6 +2633,14 @@ member of the dba group.
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            If any regular or application users have been granted excessive administrative rights,<br>those privileges should be removed immediately via the Yugabyte ALTER ROLE YSQL<br>command. Using the same example above, the following YSQL statements revoke all<br>unnecessary elevated administrative privileges from the regular user appuser:<br># whoami<br>yugabyte<br># ysqlsh -c "ALTER ROLE appuser NOSUPERUSER;" ALTER ROLE<br># ysqlsh -c "ALTER ROLE appuser NOCREATEROLE;" ALTER ROLE<br># ysqlsh -c "ALTER ROLE appuser NOCREATEDB;" ALTER ROLE<br># ysqlsh -c "ALTER ROLE appuser NOREPLICATION;" ALTER ROLE<br># ysqlsh -c "ALTER ROLE appuser NOBYPASSRLS;" ALTER ROLE<br># ysqlsh -c "ALTER ROLE appuser NOINHERIT;" ALTER ROLE<br>Verify the appuser now passes your check by having no defined Attributes:<br># whoami<br>yugabyte<br># ysqlsh -c "\du appuser"<br>List of roles<br>Role name | Attributes | Member of<br>+ + appuser | | {}<br>
                         </div>
                     </div>
                 </div>
@@ -1852,13 +2690,13 @@ organizational guidance, this is a fail.
                         </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>4.4: Ensure excessive DML privileges are revoked</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -1871,15 +2709,23 @@ organizational guidance, this is a fail.
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            If a given database user has been granted excessive DML privileges for a given<br>database table, those privileges should be revoked immediately using the REVOKE<br>YSQL command.<br>Continuing with the example above, remove unauthorized grants for appreader user<br>using the REVOKE statement and verify the Boolean values are now false.<br>yugabyte=# REVOKE INSERT, UPDATE, DELETE ON TABLE customer FROM appreader;<br>REVOKE<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>4.5: Ensure Row Level Security (RLS) is configured correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -1892,15 +2738,23 @@ organizational guidance, this is a fail.
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            In this example, we are using the using the example passwd table. We will create three<br>database roles to illustrate the workings of RLS:<br>yugabyte=# CREATE ROLE admin; CREATE ROLE<br>yugabyte=# CREATE ROLE bob; CREATE ROLE<br>yugabyte=# CREATE ROLE alice; CREATE ROLE<br>Now, we will insert known data into the passwd table:<br>yugabyte=# INSERT INTO passwd VALUES<br>('admin','xxx',0,0,'Admin','111-222-3333',null,'/root','/bin/dash');<br>INSERT 0 1<br>yugabyte=# INSERT INTO passwd VALUES<br>('bob','xxx',1,1,'Bob','123-456-7890',null,'/home/bob','/bin/zsh');<br>INSERT 0 1<br>yugabyte=# INSERT INTO passwd VALUES<br>('alice','xxx',2,1,'Alice','098-765-4321',null,'/home/alice','/bin/zsh');<br>INSERT 0 1<br>And we will enable RLS on the table:<br>yugabyte=# ALTER TABLE passwd ENABLE ROW LEVEL SECURITY; ALTER TABLE<br>Now that RLS is enabled, we need to define one or more policies. Create the<br>administrator policy and allow it access to all rows:<br>yugabyte=# CREATE POLICY admin_all ON passwd TO admin USING (true) WITH CHECK<br>(true);<br>CREATE POLICY<br>Create a policy for normal users to view all rows:<br>yugabyte=# CREATE POLICY all_view ON passwd FOR SELECT USING (true); CREATE<br>POLICY<br>Create a policy for normal users that allows them to update only their own rows and to<br>limit what values can be set for their login shell:<br>yugabyte=# CREATE POLICY user_mod ON passwd FOR UPDATE USING (current_user =<br>user_name)<br>WITH CHECK (<br>current_user = user_name AND<br>shell IN ('/bin/bash','/bin/sh','/bin/dash','/bin/zsh','/bin/tcsh')<br>);<br>CREATE POLICY<br>Grant all the normal rights on the table to the admin user:<br>yugabyte=# GRANT SELECT, INSERT, UPDATE, DELETE ON passwd TO admin; GRANT<br>Page 104<br>Grant only select access on non-sensitive columns to everyone:<br>yugabyte=# GRANT SELECT<br>(user_name, uid, gid, real_name, home_phone, extra_info, home_dir, shell) ON<br>passwd TO public;<br>GRANT<br>Grant update to only the sensitive columns:<br>yugabyte=# GRANT UPDATE<br>(pwhash, real_name, home_phone, extra_info, shell) ON passwd TO public;<br>GRANT<br>Ensure that no one has been granted Bypass RLS inadvertently, by running the psql<br>display command \du+. If unauthorized users do have Bypass RLS granted then resolve<br>this using the ALTER ROLE <user> NOBYPASSRLS; command.<br>You can now verify that 'admin', 'bob', and 'alice' are properly restricted by querying the<br>passwd table as each of these roles.<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>4.6: Make use of predefined roles</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -1925,260 +2779,13 @@ yugabyte
 (2 rows)
 </div>
                         </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div class="section-summary">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <h3>Access Control and Password Policies <span class="chevron">▶</span></h3>
-                    <div class="section-stats">
-                        <div class="section-stat">Total: 5</div>
-                        <div class="section-stat">Passed: 0</div>
-                        <div class="section-stat">Failed: 1</div>
-                        <div class="section-stat">Pass Rate: 0.0%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0.0%;"></div>
-                    </div>
-                </div>
-                <div class="controls-container">
-                    
-                <div class="control fail">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>5.1: Ensure that authentication is enabled for YCQL interface of the YugabyteDB</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge FAIL">FAIL</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Password encryption using MD5 - consider upgrading to SCRAM-SHA-256</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Expected:</span>
-                            <span>scram-sha-256</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Actual:</span>
-                            <span>md5</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Run the following command to verify whether authentication is enabled on the YCQL
-interface of the YugabyteDB server.
-The YugabyteDB configuration files can be found in the conf directory of tarballs. For
-packages, the configuration files will be located in /home/user/var/conf.
-cat ts.config | grep use_cassandra_authentication
-If use_cassandra_authentication is set to false, then this is a finding.
-</div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
                         </div>
                         <div class="remediation">
                             <strong>Remediation:</strong><br>
-                            Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the<br>following GFLAG to YB-TServer:<br>./bin/yb-tserver --use_cassandra_authentication=true<br>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>5.2: Ensure that the default password changed for the cassandra role</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Connect to YugabyteDB database via YCQL to verify whether the cassandra role has
-default password.
-./bin/ycqlsh -u cassandra -p cassandra
-If the connection is successful this is a finding.
-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>5.3: Ensure the cassandra and superuser roles are separate</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">To verify the configuration, run the following query:
-cassandra@ycqlsh> SELECT role FROM system_auth.roles WHERE is_superuser =
-True;
-role
------------
-cassandra
-(1 rows)
-If cassandara or any unapproved role is returned, this is a finding.
-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>5.4: Ensure there are no unnecessary roles or excessive privileges</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>5.5: Ensure that YCQL only listens for network connections on authorized interfaces</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Check the value of cql_proxy_bind_address in the ts.config. If
-cql_proxy_bind_address is set to a non-authorized IP address or port, this is a finding.
-cat ts.config | grep cql_proxy_bind_address
-</div>
-                        </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div class="section-summary">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <h3>Connection and Login <span class="chevron">▶</span></h3>
-                    <div class="section-stats">
-                        <div class="section-stat">Total: 2</div>
-                        <div class="section-stat">Passed: 0</div>
-                        <div class="section-stat">Failed: 0</div>
-                        <div class="section-stat">Pass Rate: 0.0%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0.0%;"></div>
-                    </div>
-                </div>
-                <div class="controls-container">
-                    
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>6.1: Ensure login via local UNIX Domain Socket is configured correctly</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Newly created data clusters are empty of data and have two user accounts, the
-superusers yugabyte and postgres. By default, the data cluster superuser is named
-after the UNIX account yugabyte. Login authentication is tested via UNIX DOMAIN
-SOCKETS by the UNIX user account yugabyte, the default account, and set_user has
-not yet been configured:
-# ./bin/yugabyte
-yugabyte=#
-Login attempts by another UNIX user account as the superuser should be denied:
-# su - user1 # whoami user1
-# ./bin/ysqlsh -U yugabyte -d yugabyte
-ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
-# exit
-This test demonstrates that not only is logging in as the superuser blocked, but so is
-logging in as another user:
-# su - user2 # whoami user2
-# ./bin/ysqlsh -U yugabyte -d yugabyte
-ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
-# ./bin/ysqlsh -U user1 -d yugabyte
-ysqlsh: FATAL: Peer authentication failed for user "user1"
-# ./bin/ysqlsh -U user2 -d yugabyte
-yugabyte=#
-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>6.2: Ensure login via 'host' TCP/IP Socket is configured correctly</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
+                            If you've determined that one or more of the predefined roles can be used, simply GRANT<br>it:<br>yugabyte=# GRANT pg_monitor TO yugabyte; GRANT ROLE<br>And then remove superuser from the account:<br>yugabyte=# ALTER ROLE yugabyte NOSUPERUSER; ALTER ROLE<br>yugabyte=# select rolname from pg_roles where rolsuper is true; rolname<br>yugabyte (1 row)<br>
                         </div>
                     </div>
                 </div>
@@ -2190,7 +2797,9 @@ yugabyte=#
                     <div class="section-stats">
                         <div class="section-stat">Total: 9</div>
                         <div class="section-stat">Passed: 0</div>
-                        <div class="section-stat">Failed: 0</div>
+                        <div class="section-stat">Failed: 4</div>
+                        <div class="section-stat">Skipped: 0</div>
+                        <div class="section-stat manual">Manual: 5</div>
                         <div class="section-stat">Pass Rate: 0.0%</div>
                     </div>
                     <div class="progress-bar">
@@ -2199,13 +2808,13 @@ yugabyte=#
                 </div>
                 <div class="controls-container">
                     
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.1: Understanding attack vectors and runtime GFLAGs</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -2224,26 +2833,42 @@ yugabyte=#
 modifications and changes to the RDBMS.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            In the case of a changed parameter, the value is returned back to its default value. In<br>the case of a successful exploit of an already set runtime parameter then an analysis<br>must be carried out to determine the best approach in mitigating the risk to prevent<br>future exploitation.<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.2: Ensure 'backend' runtime parameters are configured correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Generic runtime parameter check - manual verification required</span>
+                            <span>Insecure runtime parameter settings found: log_connections: off (should be on for auditing); log_disconnections: off (should be on for auditing)</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>All backend parameters configured securely</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>8 parameters found: ignore_system_indexes: off, jit_debugging_support: off, jit_profiling_support: off, log_connections: off, log_disconnections: off, post_auth_delay: 0 ... and 2 more</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -2265,15 +2890,19 @@ Therefore, a successful exploit may not be detected until after a server restart
 during a maintenance window.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Once detected, the unauthorized/undesired change can be corrected by altering the<br>configuration file and executing a server restart. In the case where the parameter has<br>been specified on the command-line invocation of yb_ctl the restart invocation is<br>insufficient and an explicit stop and start must instead be made.<br>1. Query the view pg_settings and compare with previous query outputs for any<br>changes.<br>2. Review configuration files ysql_pg.conf and ysql_hba.conf and compare them<br>with previously archived file copies for any changes.<br>3. Examine the process output and look for parameters that were used at server<br>startup:<br>ps -few | grep -E '[p]ost' | grep -- '-[D]'<br>1. Examine the contents of $PGDATA/postmaster.opts<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.3: Ensure 'Postmaster' Runtime Parameters are Configured</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -2294,15 +2923,23 @@ Therefore, all exploits require the successful compromise of either that UNIX ac
 the postgres superuser account itself.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Once detected, the unauthorized/undesired change can be corrected by editing the<br>altered configuration file and executing a server restart. In the case where the<br>parameter has been specified on the command-line invocation of pg_ctl the restart<br>invocation is insufficient and an explicit stop and start must instead be made.<br>Detecting a change is possible by one of the following methods:<br>1. Query the view pg_settings and compare with previous query outputs for any<br>changes<br>2. Review the configuration files ysql_pg.conf and ysql_hba.conf and compare<br>with previously archived file copies for any changes<br>3. Examine the process output and look for parameters that were used at server<br>startup:<br>ps -few | grep -E 'postgres' | grep -- '-[D]'<br>1. Examine the contents of $PGDATA/postmaster.opts<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.4: Ensure 'SIGHUP' Runtime Parameters are Configured</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -2322,15 +2959,23 @@ owner of the postmaster server process and cluster (typically UNIX user account
 yugabyte).
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Restore all values in the YugabyteDB configuration files and invoke the server to restart.<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.5: Ensure 'Superuser' Runtime Parameters are Configured</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -2351,15 +2996,23 @@ Therefore, all exploits require the successful compromise of either that UNIX ac
 the yugabyte superuser account itself.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            The exploit is made in the configuration files. These changes are effected upon server<br>restart. Once detected, the unauthorized/undesired change can be made by editing the<br>altered configuration file and executing a server restart. In the case where the<br>parameter has been set on the command-line invocation of pg_ctl the restart invocation<br>is insufficient and an explicit stop and start must instead be made.<br>Detecting a change is possible by one of the following methods:<br>1. Query the view pg_settings and compare with previous query outputs for any<br>changes.<br>2. Review the configuration files ysql_pg.conf and ysql_hba.conf and compare<br>with previously archived file copies for any changes.<br>3. Examine the process output and look for parameters that were used at server<br>startup:<br>ps aux | grep -E 'post' | grep -- '-[D]'<br>1. Examine the contents of $PGDATA/postmaster.opts<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control manual">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.6: Ensure 'User' Runtime Parameters are Configured</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge MANUAL">MANUAL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
@@ -2379,26 +3032,42 @@ they have been compromised is to inspect all catalogs and list attributes for da
 entities such as ROLEs and databases.
 </div>
                         </div>
+                        <div class="manual-verification">
+                            <strong>Manual Verification Required:</strong><br>
+                            <p>This control requires manual verification. Please consult the CIS benchmark documentation for detailed steps.</p>
+                        </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            In the matter of a user session, the login sessions must be validated that it is not<br>executing undesired parameter changes. In the matter of attributes that have been<br>changed in entities, they must be manually reverted to their default value(s).<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.7: Ensure TLS is enabled and configured correctly: server to server</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Generic YugabyteDB setting check - manual verification required</span>
+                            <span>SSL/TLS is not enabled: off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -2406,26 +3075,38 @@ entities such as ROLEs and databases.
 into the database.
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            Before you can enable and use server-to-server encryption, you need to create and<br>configure server certificates for each node of your YugabyteDB cluster. For information,<br>see: https://docs.yugabyte.com/preview/secure/tls-encryption/server-certificates/<br>To enable server-to-server encryption using TLS, start your YB-Master and YB-TServer<br>nodes using the following flags.<br>• --use_node_to_node_encryption Set to true to enable encryption between<br>YugabyteDB nodes. Default value is false.<br>• --allow_insecure_connections Set to false to disallow any service with<br>unencrypted communication from joining this cluster. Default value is true. Note<br>that this flag requires --use_node_to_node_encryption to be enabled.<br>• --certs_for_client_dir Optional. Directory containing the certificates created<br>for this node to perform encrypted communication with the other nodes. Default<br>for YB-Masters is <data drive>/yb-data/master/data/certs and for YBTServers is <data drive>/yb-data/tserver/data/certs<br>You can enable access control by starting the yb-master services with the --<br>use_node_to_node_encryption=true flag as described above<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control info">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.8: Ensure TLS is enabled and configured correctly: client to server</strong>
                         </div>
                         <div>
-                            <span class="status-badge INFO">INFO</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>YugabyteDB setting ssl: off</span>
+                            <span>SSL/TLS is not enabled for client connections: off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>on</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>off</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -2438,26 +3119,38 @@ off
 (1 row)
 </div>
                         </div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            To enable client-to-server encryption for YSQL and YCQL, start your YB-TServer<br>services with the required flags described below. Your YB-Master services do not<br>require additional configuration.<br>• --use_client_to_server_encryption Set to true to enable encryption between<br>the various YugabyteDB clients and the database cluster. Default value is false.<br>• --allow_insecure_connections Set to false to disallow any client with<br>unencrypted communication from joining this cluster. Default value is true. Note<br>that this flag requires --use_client_to_server_encryption to be enabled.<br>• --certs_for_client_dir Optional. Defaults to the same directory as the serverto-server encryption. <br>This directory should contain the configuration for the client<br>to perform TLS communication with the cluster. Default value for YB-TServer is<br><data drive>/yb-data/tserver/data/certs.<br>To enable access control, follow these steps, start the yb-tserver services with the<br>following flag (described above):<br>--use_client_to_server_encryption=true<br>This flag enables both encrypted and unencrypted clients to connect to the cluster.<br>To prevent clients without the appropriate encryption from connecting, you must add the<br>following flag:<br>--allow_insecure_connections=false<br>Your command should look similar to this:<br>./bin/yb-tserver \<br>--fs_data_dirs=<data directories> \<br>--tserver_master_addrs=<master addresses> \<br>--certs_for_client_dir /home/centos/tls/$NODE_IP \<br>--allow_insecure_connections=false \<br>--use_client_to_server_encryption=true &<br>
+                        </div>
                     </div>
                 </div>
-                <div class="control skip">
+                <div class="control fail">
                     <div class="control-header" onclick="toggleControl(this)">
                         <div>
                             <strong>7.9: Ensure the pgcrypto extension is installed and configured correctly</strong>
                         </div>
                         <div>
-                            <span class="status-badge SKIP">SKIP</span>
+                            <span class="status-badge FAIL">FAIL</span>
                             <span class="chevron">▶</span>
                         </div>
                     </div>
                     <div class="control-body">
                         <div class="detail-row">
                             <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
+                            <span>pgcrypto extension is available but not installed. name: pgcrypto, default_version: 1.3, comment: cryptographic functions</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Profile Level:</span>
                             <span>Level 1 - Yugabyte</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expected:</span>
+                            <span>pgcrypto installed for data encryption</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Actual:</span>
+                            <span>installed_version: NULL, name: pgcrypto, default_version: 1.3, comment: cryptographic functions</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Audit Command:</span>
@@ -2475,179 +3168,9 @@ demonstrate the use of disk-level encryption. If this is required and is not fou
 fail. If controls do not exist or are not enabled, this is also a fail.
 </div>
                         </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div class="section-summary">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <h3>Special Configuration Considerations <span class="chevron">▶</span></h3>
-                    <div class="section-stats">
-                        <div class="section-stat">Total: 4</div>
-                        <div class="section-stat">Passed: 0</div>
-                        <div class="section-stat">Failed: 0</div>
-                        <div class="section-stat">Pass Rate: 0.0%</div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0.0%;"></div>
-                    </div>
-                </div>
-                <div class="controls-container">
-                    
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>8.1: Ensure base backups are configured and functional</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Verify snapshots exist by executing the list_snapshots command, as follows:
-./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
-All the snapshots in the cluster are listed, along with their statuses.
-Snapshot UUID State Creation Time
-0d4b4935-2c95-4523-95ab-9ead1e95e794 COMPLETE 2023-04-20
-00:20:38.214201
-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>8.2: Ensure YugabyteDB configuration files are outside the data cluster</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Execute the following commands to verify the configuration is correct:
-yugabyte=# select name, setting from pg_settings where name ~ '.*_file$';
-name | setting
---------------------+--------------------------------------------------------
--
-config_file | /home/user/var/data/pg_data/ysql_pg.conf
-external_pid_file |
-hba_file | /home/user/var/data/pg_data/ysql_hba.conf
-ident_file | /home/user/var/data/pg_data/pg_ident.conf
-ssl_ca_file |
-ssl_cert_file | server.crt
-ssl_crl_file |
-ssl_dh_params_file |
-ssl_key_file | server.key
-(9 rows)
-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>8.3: Ensure YugabyteDB subdirectory locations are outside the data cluster</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Execute the following YSQL statement to verify the configuration is correct.
-Alternatively, inspect the parameter settings in the ysql_pg.conf configuration file.
-yugabyte=# select name, setting from pg_settings where (name ~
-'_directory$');
-name | setting
-----------------------+------------------------------------------------------
---
-data_directory | /home/user/var/data/pg_data
-default_tablespace |
-log_directory | /home/user/var/data/yb-data/tserver/logs
-stats_temp_directory | pg_stat_tmp
-temp_tablespaces |
-(5 rows)
-Inspect the file and directory permissions for all returned values. Only superusers and
-authorized users should have access control rights for these files and directories. If
-permissions are not highly restrictive, this is a fail.
-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="control skip">
-                    <div class="control-header" onclick="toggleControl(this)">
-                        <div>
-                            <strong>8.4: Ensure miscellaneous configuration settings are correct</strong>
-                        </div>
-                        <div>
-                            <span class="status-badge SKIP">SKIP</span>
-                            <span class="chevron">▶</span>
-                        </div>
-                    </div>
-                    <div class="control-body">
-                        <div class="detail-row">
-                            <span class="detail-label">Message:</span>
-                            <span>Manual control - requires manual verification</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Profile Level:</span>
-                            <span>Level 1 - Yugabyte</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Audit Command:</span>
-                            <div class="audit-cmd">Execute the following YSQL statement to verify the configuration is correct.
-Alternatively, inspect the parameter settings in the ysql_pg.conf configuration file.
-yugabyte=# select name, setting from pg_settings where name in
-('external_pid_file',
-'unix_socket_directories','shared_preload_libraries','dynamic_library_path','
-local_preload_libraries','session_preload_libraries');
-name | setting
----------------------------+-------------------------------------------------
-------
-dynamic_library_path | $libdir
-external_pid_file |
-local_preload_libraries |
-session_preload_libraries |
-shared_preload_libraries |
-pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan
-unix_socket_directories | /tmp/
-(6 rows)
-Inspect the file and directory permissions for all returned values. Only superusers
-should have access control rights for these files and directories. If permissions are not
-highly restricted, this is a fail.
-</div>
+                        <div class="remediation">
+                            <strong>Remediation:</strong><br>
+                            The pgcrypto extension is included with the YugabyteDB 'contrib' package. Although<br>included, it needs to be created in the database.<br>As the database administrator, run the following:<br>yugabyte=# CREATE EXTENSION pgcrypto;<br>Verify pgcrypto is installed:<br>yugabyte=# SELECT * FROM pg_available_extensions WHERE name='pgcrypto';<br>name | default_version | installed_version | comment<br>----------+-----------------+-------------------+-------------------------<br>pgcrypto | 1.3 | 1.3 | cryptographic functions<br>(1 row)<br>
                         </div>
                     </div>
                 </div>
@@ -2658,30 +3181,51 @@ highly restricted, this is a fail.
     
     <script>
         function toggleSection(element) {
+            console.log('toggleSection called');
             const container = element.parentElement.querySelector('.controls-container');
             const chevron = element.querySelector('.chevron');
 
-            container.classList.toggle('expanded');
-            chevron.classList.toggle('rotated');
+            if (container && chevron) {
+                container.classList.toggle('expanded');
+                chevron.classList.toggle('rotated');
+                console.log('Section toggled:', container.classList.contains('expanded'));
+            } else {
+                console.error('Could not find container or chevron');
+            }
         }
 
         function toggleControl(element) {
+            console.log('toggleControl called');
             const body = element.nextElementSibling;
             const chevron = element.querySelector('.chevron');
 
-            body.classList.toggle('expanded');
-            chevron.classList.toggle('rotated');
+            if (body && chevron) {
+                body.classList.toggle('expanded');
+                chevron.classList.toggle('rotated');
+                console.log('Control toggled:', body.classList.contains('expanded'));
+            } else {
+                console.error('Could not find body or chevron');
+            }
         }
 
         // Auto-expand failed sections with animation
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up sections');
+            
             const failedSections = document.querySelectorAll('.section-summary');
+            console.log('Found sections:', failedSections.length);
+            
             failedSections.forEach((section, index) => {
                 const failedControls = section.querySelectorAll('.control.fail');
-                if (failedControls.length > 0) {
+                const manualControls = section.querySelectorAll('.control.manual');
+                
+                if (failedControls.length > 0 || manualControls.length > 0) {
                     setTimeout(() => {
                         const header = section.querySelector('.section-header');
-                        toggleSection(header);
+                        if (header) {
+                            console.log('Auto-expanding section:', header.textContent);
+                            toggleSection(header);
+                        }
                     }, index * 200); // Stagger the animations
                 }
             });
@@ -2690,9 +3234,12 @@ highly restricted, this is a fail.
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
                 });
             });
         });
