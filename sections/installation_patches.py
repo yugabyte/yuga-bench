@@ -22,6 +22,16 @@ class InstallationPatchesChecker(BaseChecker):
                 return self._check_systemd_service_enabled(control)
             elif control_id.startswith("1.3"):
                 return self._check_cluster_initialized(control)
+            elif control_id.startswith("1.4"):
+                return self._check_separate_user_group_yugabytedb(control)
+            elif control_id.startswith("1.5"):
+                return self._check_latest_python_version(control)
+            elif control_id.startswith("1.6"):
+                return self._check_latest_yugabytedb_version(control)
+            elif control_id.startswith("1.7"):
+                return self._check_yugabyted_service_non_root_user(control)
+            elif control_id.startswith("1.8"):
+                return self._check_clock_sync(control)
             else:
                 return self._check_generic_installation(control)
         except Exception as e:
@@ -72,18 +82,6 @@ class InstallationPatchesChecker(BaseChecker):
 
         except Exception as e:
             return self._create_fail_result(control, f"Error checking patches: {str(e)}")
-
-    def _check_cluster_initialized(self, control: CISControl) -> ControlResult:
-        """Check data cluster initialized successfully"""
-        return self._create_skip_result(control, "TODO - Implementation pending")
-
-    def _check_packages_from_authorized_repo(self, control: CISControl) -> ControlResult:
-        """Check packages are obtained from authorized repository"""
-        return self._create_skip_result(control, "Manual - TODO - Implementation pending")
-
-    def _check_systemd_service_enabled(self, control: CISControl) -> ControlResult:
-        """Check systemd service files enabled"""
-        return self._create_skip_result(control, "Manual - TODO - Implementation pending")
 
     def _check_installation_integrity(self, control: CISControl) -> ControlResult:
         """Check installation integrity"""
@@ -137,3 +135,35 @@ class InstallationPatchesChecker(BaseChecker):
                                             actual=setting_value)
         else:
             return self._create_skip_result(control, "Generic installation check - manual verification required")
+
+    def _check_packages_from_authorized_repo(self, control: CISControl) -> ControlResult:
+        """Check packages are obtained from authorized repository"""
+        return self._create_info_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_systemd_service_enabled(self, control: CISControl) -> ControlResult:
+        """Check systemd service files enabled"""
+        return self._create_info_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_cluster_initialized(self, control: CISControl) -> ControlResult:
+        """Check data cluster initialized successfully"""
+        return self._create_skip_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_separate_user_group_yugabytedb(self, control: CISControl) -> ControlResult:
+        """Check a separate user and group exist for YugabyteDB"""
+        return self._create_skip_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_latest_python_version(self, control: CISControl) -> ControlResult:
+        """Check the latest version of Python is installed"""
+        return self._create_skip_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_latest_yugabytedb_version(self, control: CISControl) -> ControlResult:
+        """Check latest version of YugabyteDB is installed"""
+        return self._create_skip_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_yugabyted_service_non_root_user(self, control: CISControl) -> ControlResult:
+        """Check the YugabyteDB service is run as a non-root user"""
+        return self._create_skip_result(control, "⏳ This check has not been implemented yet.")
+
+    def _check_clock_sync(self, control: CISControl) -> ControlResult:
+        """Check clocks are synchronized on all node"""
+        return self._create_skip_result(control, "⏳ This check has not been implemented yet.")

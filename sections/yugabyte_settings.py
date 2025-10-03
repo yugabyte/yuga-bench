@@ -19,11 +19,17 @@ class YugabyteSettingsChecker(BaseChecker):
             if control_id.startswith("7.1"):
                 return self._check_shared_preload_libraries(control)
             elif control_id.startswith("7.2"):
-                return self._check_runtime_parameters(control)
+                return self._check_backend_runtime_parameters(control)
             elif control_id.startswith("7.3"):
                 return self._check_memory_settings(control)
             elif control_id.startswith("7.4"):
                 return self._check_maintenance_settings(control)
+            elif control_id.startswith("7.7"):
+                return self._check_tls_enabled_server_to_server(control)
+            elif control_id.startswith("7.8"):
+                return self._check_tls_enabled_client_to_server(control)
+            elif control_id.startswith("7.9"):
+                return self._check_pgcrypto_installed_enabled(control)
             else:
                 return self._check_generic_yugabyte_setting(control)
         except Exception as e:
@@ -270,3 +276,331 @@ class YugabyteSettingsChecker(BaseChecker):
                                             actual=str(setting_value))
         else:
             return self._create_skip_result(control, "Generic YugabyteDB setting check - manual verification required")
+
+    def _check_backend_runtime_parameters(self, control: CISControl) -> ControlResult:
+        """Check backend runtime parameters are configured securely"""
+        try:
+            # Query backend runtime parameters
+            runtime_params_query = """
+            SELECT name, setting FROM pg_settings 
+            WHERE context IN ('backend','superuser-backend') 
+            ORDER BY name;
+            """
+
+            params_result = self.db.execute_query(runtime_params_query)
+
+            if not params_result:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve backend runtime parameters",
+                                            expected="Secure parameter settings",
+                                            actual="Query failed")
+
+            # Define expected secure values for critical parameters
+            secure_settings = {
+                'ignore_system_indexes': 'off',
+                'jit_debugging_support': 'off',
+                'jit_profiling_support': 'off',
+                'log_connections': 'on',  # Should be enabled for auditing
+                'log_disconnections': 'on',  # Should be enabled for auditing
+                'post_auth_delay': '0'
+            }
+
+            # Convert results to dictionary for easier checking
+            current_settings = {param['name']: param['setting'] for param in params_result}
+
+            issues = []
+            warnings = []
+            secure_params = []
+
+            # Check each parameter
+            for param_name, expected_value in secure_settings.items():
+                current_value = current_settings.get(param_name)
+
+                if current_value is None:
+                    warnings.append(f"{param_name}: not found")
+                    continue
+
+                if param_name in ['ignore_system_indexes', 'jit_debugging_support', 'jit_profiling_support']:
+                    # These should be 'off' for security
+                    if current_value.lower() != 'off':
+                        issues.append(f"{param_name}: {current_value} (should be off)")
+                    else:
+                        secure_params.append(f"{param_name}: {current_value}")
+                elif param_name in ['log_connections', 'log_disconnections']:
+                    # These should be 'on' for auditing
+                    if current_value.lower() != 'on':
+                        issues.append(f"{param_name}: {current_value} (should be on for auditing)")
+                    else:
+                        secure_params.append(f"{param_name}: {current_value}")
+
+                elif param_name == 'post_auth_delay':
+                    # Should be 0 for normal operation
+                    if current_value != '0':
+                        warnings.append(f"{param_name}: {current_value} (non-zero delay)")
+                    else:
+                        secure_params.append(f"{param_name}: {current_value}")
+
+            # Check for any unexpected backend parameters that might be risky
+            risky_params = []
+            for param in params_result:
+                param_name = param['name']
+                if param_name not in secure_settings:
+                    # Look for potentially risky parameters
+                    if any(risk_keyword in param_name.lower() for risk_keyword in 
+                        ['debug', 'trace', 'dump', 'test', 'unsafe']):
+                        risky_params.append(f"{param_name}: {param['setting']}")
+
+            # Prepare result message
+            all_params = [f"{p['name']}: {p['setting']}" for p in params_result]
+            actual_summary = f"{len(params_result)} parameters found: " + ", ".join(all_params[:6])
+            if len(all_params) > 6:
+                actual_summary += f" ... and {len(all_params) - 6} more"
+
+            # Determine result based on findings
+            if issues:
+                return self._create_fail_result(control, 
+                                            f"Insecure runtime parameter settings found: {'; '.join(issues)}",
+                                            expected="All backend parameters configured securely",
+                                            actual=actual_summary)
+            elif warnings or risky_params:
+                warning_msg = []
+                if warnings:
+                    warning_msg.extend(warnings)
+                if risky_params:
+                    warning_msg.append(f"Potentially risky parameters: {'; '.join(risky_params)}")
+
+                return self._create_warn_result(control, 
+                                            f"Runtime parameters need review: {'; '.join(warning_msg)}",
+                                            expected="All backend parameters configured securely",
+                                            actual=actual_summary)
+            else:
+                return self._create_pass_result(control, 
+                                            f"Backend runtime parameters are securely configured: {'; '.join(secure_params)}",
+                                            expected="All backend parameters configured securely",
+                                            actual=actual_summary)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking runtime parameters: {str(e)}")
+
+    def _check_tls_enabled_server_to_server(self, control: CISControl) -> ControlResult:
+        """Check if TLS/SSL is enabled for server-to-server communication"""
+        try:
+            # Check if SSL is enabled
+            ssl_enabled = self.db.get_setting('ssl')
+
+            if not ssl_enabled:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve SSL setting",
+                                            expected="on",
+                                            actual="NULL")
+
+            if ssl_enabled.lower() != 'on':
+                return self._create_fail_result(control, 
+                                            f"SSL/TLS is not enabled: {ssl_enabled}",
+                                            expected="on",
+                                            actual=ssl_enabled)
+
+            # SSL is enabled, now check SSL certificate and key file configuration
+            ssl_files_query = """
+            SELECT name, setting FROM pg_settings 
+            WHERE name LIKE 'ssl%file' 
+            ORDER BY name;
+            """
+
+            ssl_files_result = self.db.execute_query(ssl_files_query)
+
+            if not ssl_files_result:
+                return self._create_warn_result(control, 
+                                            "SSL is enabled but could not verify SSL file configuration",
+                                            expected="SSL enabled with proper certificate files",
+                                            actual=f"ssl = {ssl_enabled}, SSL files check failed")
+
+            ssl_files = {row['name']: row['setting'] for row in ssl_files_result}
+
+            cert_file = ssl_files.get('ssl_cert_file', '')
+            key_file = ssl_files.get('ssl_key_file', '')
+            ca_file = ssl_files.get('ssl_ca_file', '')
+
+            config_details = []
+            issues = []
+
+            if cert_file:
+                config_details.append(f"cert_file: {cert_file}")
+            else:
+                issues.append("ssl_cert_file not configured")
+
+            if key_file:
+                config_details.append(f"key_file: {key_file}")
+            else:
+                issues.append("ssl_key_file not configured")
+
+            if ca_file:
+                config_details.append(f"ca_file: {ca_file}")
+            else:
+                config_details.append("ca_file: not set")
+
+            # Check for other SSL files
+            for file_type in ['ssl_crl_file', 'ssl_dh_params_file']:
+                if ssl_files.get(file_type):
+                    config_details.append(f"{file_type}: {ssl_files[file_type]}")
+
+            config_summary = f"ssl = {ssl_enabled}; " + "; ".join(config_details)
+
+            # Determine result based on SSL configuration completeness
+            if issues:
+                return self._create_fail_result(control, 
+                                            f"SSL enabled but incomplete configuration: {'; '.join(issues)}",
+                                            expected="SSL enabled with certificate and key files configured",
+                                            actual=config_summary)
+
+            # Check if using default filenames (security consideration)
+            using_defaults = (cert_file == 'server.crt' and key_file == 'server.key')
+
+            if using_defaults:
+                return self._create_warn_result(control, 
+                                            "SSL properly enabled but using default certificate filenames",
+                                            expected="SSL enabled with custom certificate filenames",
+                                            actual=config_summary)
+            else:
+                return self._create_pass_result(control, 
+                                            f"SSL/TLS properly configured for server-to-server communication",
+                                            expected="SSL enabled with proper certificate configuration",
+                                            actual=config_summary)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking TLS configuration: {str(e)}")
+
+    def _check_tls_enabled_client_to_server(self, control: CISControl) -> ControlResult:
+        """Check if TLS/SSL is enabled for client-to-server communication"""
+        try:
+            ssl_enabled = self.db.get_setting('ssl')
+
+            if not ssl_enabled:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve SSL setting",
+                                            expected="on",
+                                            actual="NULL")
+
+            if ssl_enabled.lower() != 'on':
+                return self._create_fail_result(control, 
+                                            f"SSL/TLS is not enabled for client connections: {ssl_enabled}",
+                                            expected="on",
+                                            actual=ssl_enabled)
+
+            # SSL is enabled, now check SSL certificate and key file configuration
+            ssl_files_query = """
+            SELECT name, setting FROM pg_settings 
+            WHERE name LIKE 'ssl%file' 
+            ORDER BY name;
+            """
+
+            ssl_files_result = self.db.execute_query(ssl_files_query)
+
+            if not ssl_files_result:
+                return self._create_warn_result(control, 
+                                            "SSL is enabled but could not verify SSL certificate configuration",
+                                            expected="SSL enabled with proper certificate files",
+                                            actual=f"ssl = {ssl_enabled}, SSL files check failed")
+
+            ssl_files = {row['name']: row['setting'] for row in ssl_files_result}
+
+            cert_file = ssl_files.get('ssl_cert_file', '')
+            key_file = ssl_files.get('ssl_key_file', '')
+            ca_file = ssl_files.get('ssl_ca_file', '')
+            crl_file = ssl_files.get('ssl_crl_file', '')
+            dh_params_file = ssl_files.get('ssl_dh_params_file', '')
+
+            # Build configuration details
+            config_details = []
+            critical_issues = []
+            warnings = []
+
+            # Check required files
+            if cert_file:
+                config_details.append(f"cert_file: {cert_file}")
+            else:
+                critical_issues.append("ssl_cert_file not configured")
+
+            if key_file:
+                config_details.append(f"key_file: {key_file}")
+            else:
+                critical_issues.append("ssl_key_file not configured")
+
+            # Optional but recommended files
+            if ca_file:
+                config_details.append(f"ca_file: {ca_file}")
+            else:
+                warnings.append("ssl_ca_file not configured (recommended for client certificate verification)")
+
+            # Other optional files
+            if crl_file:
+                config_details.append(f"crl_file: {crl_file}")
+
+            if dh_params_file:
+                config_details.append(f"dh_params_file: {dh_params_file}")
+
+            config_summary = f"ssl = {ssl_enabled}; " + "; ".join(config_details)
+
+            # Check for security concerns with default filenames
+            security_warnings = []
+            if cert_file == 'server.crt':
+                security_warnings.append("using default certificate filename")
+            if key_file == 'server.key':
+                security_warnings.append("using default key filename")
+
+            # Determine result based on configuration
+            if critical_issues:
+                return self._create_fail_result(control, 
+                                            f"SSL enabled but missing required files: {'; '.join(critical_issues)}",
+                                            expected="SSL enabled with certificate and key files configured",
+                                            actual=config_summary)
+
+            # SSL properly configured, check for warnings
+            all_warnings = warnings + security_warnings
+
+            if all_warnings:
+                return self._create_warn_result(control, 
+                                            f"SSL enabled for client connections with recommendations: {'; '.join(all_warnings)}",
+                                            expected="SSL enabled with custom certificate names and CA file",
+                                            actual=config_summary)
+            else:
+                return self._create_pass_result(control, 
+                                            "SSL/TLS properly configured for client-to-server communication",
+                                            expected="SSL enabled with proper certificate configuration",
+                                            actual=config_summary)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking client TLS configuration: {str(e)}")
+
+    def _check_pgcrypto_installed_enabled(self, control: CISControl) -> ControlResult:
+        """Check if pgcrypto extension is available and installed for data encryption"""
+        try:
+            available_query = "SELECT * FROM pg_available_extensions WHERE name='pgcrypto';"
+            available_result = self.db.execute_query(available_query)
+
+            if not available_result or len(available_result) == 0:
+                return self._create_fail_result(control, 
+                                            "pgcrypto extension is not available in this YugabyteDB installation",
+                                            expected="pgcrypto available and installed",
+                                            actual="pgcrypto not available")
+
+            extension_info = available_result[0]
+            name = extension_info.get('name')
+            default_version = extension_info.get('default_version')
+            installed_version = extension_info.get('installed_version')
+            comment = extension_info.get('comment', '')
+
+            availability_summary = f"name: {name}, default_version: {default_version}, comment: {comment}"
+
+            # Check if pgcrypto is installed (has an installed_version)
+            if installed_version and installed_version.strip():
+                return self._create_pass_result(control, 
+                                            f"pgcrypto extension is available and installed (version {installed_version})",
+                                            expected="pgcrypto available and installed",
+                                            actual=f"installed_version: {installed_version}, {availability_summary}")
+            else:
+                # pgcrypto is available but not installed
+                return self._create_fail_result(control, 
+                                            f"pgcrypto extension is available but not installed. {availability_summary}",
+                                            expected="pgcrypto installed for data encryption",
+                                            actual=f"installed_version: NULL, {availability_summary}")
+
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking pgcrypto extension: {str(e)}")

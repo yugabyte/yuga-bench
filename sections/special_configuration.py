@@ -17,15 +17,15 @@ class SpecialConfigurationChecker(BaseChecker):
 
         try:
             if control_id.startswith("8.1"):
-                return self._check_extensions_configuration(control)
+                return self._check_backup_configured_functional(control)
             elif control_id.startswith("8.2"):
-                return self._check_cluster_configuration(control)
+                return self._check_config_file_outside_data_cluster(control)
             elif control_id.startswith("8.3"):
-                return self._check_performance_configuration(control)
+                return self._check_subdirectory_locations_outside_data_cluster(control)
             elif control_id.startswith("8.4"):
-                return self._check_security_configuration(control)
+                return self._check_config_settings_correct(control)
             else:
-                return self._check_generic_special_configuration(control)
+                return self._check_generic_extension_setting(control)
         except Exception as e:
             return self._create_fail_result(control, f"Error during special configuration check: {str(e)}")
 
@@ -324,3 +324,304 @@ class SpecialConfigurationChecker(BaseChecker):
         # TODO: Implement this function.
         return self._create_fail_result(control, "Verify cluster settings",
                                         expected="on", actual=ssl_prefer_server_ciphers or "off")
+
+    def _check_backup_configured_functional(self, control: CISControl) -> ControlResult:
+        return self._create_skip_result(control, "Generic extension configuration - manual verification required")
+
+    def _check_config_file_outside_data_cluster(self, control: CISControl) -> ControlResult:
+        """Check that configuration files are located outside the data cluster directory"""
+        try:
+            # Query for all configuration files
+            config_files_query = """
+            SELECT name, setting FROM pg_settings WHERE name ~ '.*_file$';
+            """
+
+            config_files_result = self.db.execute_query(config_files_query)
+
+            if not config_files_result:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve configuration file settings",
+                                            expected="Config files outside data directory",
+                                            actual="Query failed")
+
+            # Get data directory for comparison
+            data_directory = self.db.get_setting('data_directory')
+
+            if not data_directory:
+                return self._create_warn_result(control, 
+                                            "Could not determine data_directory for comparison",
+                                            expected="Config files outside data directory",
+                                            actual="data_directory not available")
+
+            # Analyze configuration file locations
+            files_in_data_dir = []
+            files_outside_data_dir = []
+            empty_settings = []
+
+            for file_setting in config_files_result:
+                name = file_setting['name']
+                setting = file_setting['setting']
+
+                # Skip empty settings (SSL files that may not be configured)
+                if not setting or setting.strip() == '':
+                    empty_settings.append(name)
+                    continue
+
+                # Skip relative paths (like server.crt) - these are typically in data dir but are separate concern
+                if not setting.startswith('/'):
+                    continue
+
+                # Check if file is inside data directory
+                if setting.startswith(data_directory):
+                    files_in_data_dir.append(f"{name}: {setting}")
+                else:
+                    files_outside_data_dir.append(f"{name}: {setting}")
+
+            summary_parts = []
+            if files_outside_data_dir:
+                summary_parts.append(f"Outside data dir: {len(files_outside_data_dir)}")
+            if files_in_data_dir:
+                summary_parts.append(f"Inside data dir: {len(files_in_data_dir)}")
+
+            actual_summary = "; ".join(summary_parts)
+
+            if files_in_data_dir:
+                # Critical configuration files should be outside data directory
+                critical_files = ['config_file', 'hba_file', 'ident_file']
+                critical_in_data_dir = [f for f in files_in_data_dir if any(cf in f for cf in critical_files)]
+
+                if critical_in_data_dir:
+                    return self._create_fail_result(control, 
+                                                f"Critical configuration files are inside data directory: {'; '.join(critical_in_data_dir)}",
+                                                expected="Configuration files outside data cluster directory",
+                                                actual=f"data_directory: {data_directory}; {actual_summary}")
+                else:
+                    return self._create_warn_result(control, 
+                                                f"Some configuration files are inside data directory: {'; '.join(files_in_data_dir)}",
+                                                expected="All configuration files outside data cluster directory",
+                                                actual=f"data_directory: {data_directory}; {actual_summary}")
+            else:
+                if files_outside_data_dir:
+                    return self._create_pass_result(control, 
+                                                f"Configuration files are properly located outside data directory: {'; '.join(files_outside_data_dir)}",
+                                                expected="Configuration files outside data cluster directory",
+                                                actual=f"data_directory: {data_directory}; {actual_summary}")
+                else:
+                    return self._create_warn_result(control, 
+                                                "No absolute paths found for configuration files - manual verification required",
+                                                expected="Configuration files outside data cluster directory",
+                                                actual=f"data_directory: {data_directory}; Only relative paths or empty settings found")
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking configuration file locations: {str(e)}")
+
+
+    def _check_subdirectory_locations_outside_data_cluster(self, control: CISControl) -> ControlResult:
+        """Check that subdirectories are located outside data cluster and have proper permissions"""
+        try:
+            # Query for all directory settings
+            directories_query = """
+            SELECT name, setting FROM pg_settings WHERE name ~ '_directory$';
+            """
+
+            directories_result = self.db.execute_query(directories_query)
+
+            if not directories_result:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve directory settings",
+                                            expected="Subdirectories outside data cluster with restrictive permissions",
+                                            actual="Query failed")
+
+            data_directory = None
+            directories_info = {}
+
+            for dir_setting in directories_result:
+                name = dir_setting['name']
+                setting = dir_setting['setting']
+                directories_info[name] = setting
+
+                if name == 'data_directory':
+                    data_directory = setting
+
+            if not data_directory:
+                return self._create_fail_result(control, 
+                                            "Could not determine data_directory location",
+                                            expected="Subdirectories outside data cluster",
+                                            actual="data_directory not found")
+
+            # Analyze directory locations
+            dirs_inside_data = []
+            dirs_outside_data = []
+            empty_or_relative = []
+
+            for name, setting in directories_info.items():
+                # Skip data_directory itself
+                if name == 'data_directory':
+                    continue
+
+                # Handle empty or relative paths
+                if not setting or setting.strip() == '':
+                    empty_or_relative.append(f"{name}: empty")
+                    continue
+
+                # Relative paths (like pg_stat_tmp)
+                if not setting.startswith('/'):
+                    empty_or_relative.append(f"{name}: {setting} (relative)")
+                    continue
+
+                # Check if directory is inside data directory
+                if setting.startswith(data_directory):
+                    dirs_inside_data.append(f"{name}: {setting}")
+                else:
+                    dirs_outside_data.append(f"{name}: {setting}")
+
+            summary_parts = [f"data_directory: {data_directory}"]
+
+            if dirs_outside_data:
+                summary_parts.append(f"Outside: {len(dirs_outside_data)} dirs")
+            if dirs_inside_data:
+                summary_parts.append(f"Inside: {len(dirs_inside_data)} dirs")
+            if empty_or_relative:
+                summary_parts.append(f"Relative/Empty: {len(empty_or_relative)}")
+
+            actual_summary = "; ".join(summary_parts)
+
+            # Important directories that should ideally be outside data directory
+            critical_dirs = ['log_directory']
+            critical_inside = [d for d in dirs_inside_data if any(cd in d for cd in critical_dirs)]
+
+            if critical_inside:
+                return self._create_fail_result(control, 
+                                            f"Critical subdirectories are inside data cluster: {'; '.join(critical_inside)}. "
+                                            f"Manual verification of file permissions required (should be restrictive to superusers only).",
+                                            expected="Subdirectories outside data cluster with restrictive permissions",
+                                            actual=actual_summary)
+            elif dirs_inside_data:
+                return self._create_warn_result(control, 
+                                            f"Some subdirectories are inside data cluster: {'; '.join(dirs_inside_data)}. "
+                                            f"Manual verification of file permissions required (should be restrictive to superusers only).",
+                                            expected="All subdirectories outside data cluster with restrictive permissions",
+                                            actual=actual_summary)
+            else:
+                if dirs_outside_data:
+                    return self._create_pass_result(control, 
+                                                f"Subdirectories are located outside data cluster: {'; '.join(dirs_outside_data)}. "
+                                                f"NOTE: Manual verification of file/directory permissions still required (only superusers should have access).",
+                                                expected="Subdirectories outside data cluster with restrictive permissions",
+                                                actual=actual_summary)
+                else:
+                    return self._create_info_result(control, 
+                                                f"No absolute subdirectory paths found. Directories: {'; '.join(empty_or_relative)}. "
+                                                f"Manual verification of locations and permissions required.",
+                                                expected="Subdirectories outside data cluster with restrictive permissions",
+                                                actual=actual_summary)
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking subdirectory locations: {str(e)}")
+
+    def _check_config_settings_correct(self, control: CISControl) -> ControlResult:
+        """Check configuration settings for security-sensitive parameters"""
+        try:
+            config_settings_query = """
+            SELECT name, setting FROM pg_settings WHERE name IN (
+                'external_pid_file',
+                'unix_socket_directories',
+                'shared_preload_libraries',
+                'dynamic_library_path',
+                'local_preload_libraries',
+                'session_preload_libraries'
+            ) ORDER BY name;
+            """
+
+            config_result = self.db.execute_query(config_settings_query)
+
+            if not config_result:
+                return self._create_fail_result(control, 
+                                            "Could not retrieve configuration settings",
+                                            expected="Secure configuration with restrictive permissions",
+                                            actual="Query failed")
+
+            settings_info = {}
+            security_concerns = []
+            info_notes = []
+            secure_settings = []
+
+            for setting in config_result:
+                name = setting['name']
+                value = setting['setting']
+                settings_info[name] = value
+
+                if name == 'dynamic_library_path':
+                    if value == '$libdir':
+                        secure_settings.append(f"{name}: {value} (default, secure)")
+                    else:
+                        security_concerns.append(f"{name}: {value} (non-default, verify security)")
+
+                # Check unix_socket_directories
+                elif name == 'unix_socket_directories':
+                    if value and value.strip():
+                        # Check for potentially insecure locations
+                        if '/tmp' in value or '/var/tmp' in value:
+                            security_concerns.append(f"{name}: {value} (world-writable directory - potential security risk)")
+                        else:
+                            info_notes.append(f"{name}: {value} (verify restrictive permissions)")
+                    else:
+                        secure_settings.append(f"{name}: empty (no unix sockets)")
+
+                elif name == 'external_pid_file':
+                    if value and value.strip():
+                        info_notes.append(f"{name}: {value} (verify file permissions are restrictive)")
+                    else:
+                        secure_settings.append(f"{name}: not set (default)")
+
+                elif name in ['shared_preload_libraries', 'local_preload_libraries', 'session_preload_libraries']:
+                    if value and value.strip():
+                        libraries = [lib.strip() for lib in value.split(',')]
+
+                        risky_libs = ['dblink', 'file_fdw', 'plperlu', 'plpython3u']
+                        found_risky = [lib for lib in libraries if any(risky in lib.lower() for risky in risky_libs)]
+
+                        if found_risky:
+                            security_concerns.append(f"{name}: {value} (contains potentially risky libraries: {', '.join(found_risky)})")
+                        else:
+                            safe_libs = ['pg_stat_statements', 'yb_pg_metrics', 'pgaudit', 'pg_hint_plan']
+                            all_safe = all(lib in safe_libs for lib in libraries)
+
+                            if all_safe:
+                                secure_settings.append(f"{name}: {value} (known safe libraries)")
+                            else:
+                                info_notes.append(f"{name}: {value} (verify library security)")
+                    else:
+                        secure_settings.append(f"{name}: not set (default)")
+
+            summary_parts = []
+            if secure_settings:
+                summary_parts.append(f"Secure: {len(secure_settings)} settings")
+            if info_notes:
+                summary_parts.append(f"Review: {len(info_notes)} settings")
+            if security_concerns:
+                summary_parts.append(f"Concerns: {len(security_concerns)} settings")
+
+            actual_summary = "; ".join(summary_parts)
+            detailed_settings = "; ".join([f"{k}={v}" for k, v in settings_info.items()])
+
+            if security_concerns:
+                return self._create_fail_result(control, 
+                                            f"Security concerns found: {'; '.join(security_concerns)}. "
+                                            f"Manual verification of file/directory permissions required (only superusers should have access).",
+                                            expected="Secure configuration with restrictive permissions",
+                                            actual=f"{actual_summary}; Settings: {detailed_settings}")
+            elif info_notes:
+                return self._create_warn_result(control, 
+                                            f"Configuration requires manual verification: {'; '.join(info_notes)}. "
+                                            f"Ensure file/directory permissions are highly restrictive (superusers only). "
+                                            f"Secure settings: {'; '.join(secure_settings)}",
+                                            expected="All settings secure with restrictive permissions",
+                                            actual=f"{actual_summary}; Settings: {detailed_settings}")
+            else:
+                return self._create_pass_result(control, 
+                                            f"Configuration settings appear secure: {'; '.join(secure_settings)}. "
+                                            f"NOTE: Manual verification of file/directory permissions still required.",
+                                            expected="Secure configuration with restrictive permissions",
+                                            actual=f"{actual_summary}; Settings: {detailed_settings}")
+
+        except Exception as e:
+            return self._create_fail_result(control, f"Error checking configuration settings: {str(e)}")
